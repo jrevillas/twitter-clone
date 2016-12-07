@@ -3,8 +3,8 @@ package com.twitter.rmi.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import com.twitter.rmi.common.Twitter;
-import com.twitter.rmi.common.User;
+import com.twitter.rmi.common.*;
+import com.twitter.rmi.database.Database;
 
 /**
  * Created by jrevillas on 06/12/2016.
@@ -23,12 +23,18 @@ public class TwitterImpl extends UnicastRemoteObject implements Twitter {
     }
 
     @Override
-    public User login(String handle, String password) {
+    public User login(String handle, String password) throws RemoteException{
+        User user = Database.login(handle, password);
+        if (user != null)
+            return user;
         return null;
     }
 
     @Override
-    public User register(String handle, String password) {
+    public User register(String handle, String password) throws RemoteException{
+        User user = Database.register(handle, password);
+        if (user != null)
+            return user;
         return null;
     }
 

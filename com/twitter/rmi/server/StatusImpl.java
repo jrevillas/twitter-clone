@@ -10,18 +10,41 @@ import com.twitter.rmi.common.Status;
  */
 public class StatusImpl extends UnicastRemoteObject implements Status {
 
-    protected StatusImpl() throws RemoteException {
+    private Long postId;
+    private String userHandle;
+    private String body;
+
+    public StatusImpl() throws RemoteException {
         super();
     }
 
-    @Override
-    public String getContent() throws RemoteException {
-        return null;
+    public Long getPostId() throws RemoteException {
+        return this.postId;
+    }
+
+    public StatusImpl setPostId(Long postId) throws RemoteException {
+        this.postId = postId;
+        return this;
     }
 
     @Override
     public String getUserHandle() throws RemoteException {
-        return null;
+        return this.userHandle;
+    }
+
+    public StatusImpl setUserHandle (String userHandle) throws RemoteException {
+        this.userHandle = userHandle;
+        return this;
+    }
+
+    @Override
+    public String getBody() throws RemoteException {
+        return this.body;
+    }
+
+    public StatusImpl setBody(String body) throws RemoteException {
+        this.body = body;
+        return this;
     }
 
 }
