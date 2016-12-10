@@ -81,7 +81,7 @@ public class Database {
     public static List<Status> getTimeline(String handle) throws RemoteException{
         List<Status> result = new ArrayList<>();
         List<String> timeline = jedis.lrange("timeline", 0, -1);
-        List<String> followers = jedis.lrange(handle + ":followers", 0, -1);
+        List<String> followers = jedis.lrange(handle + ":following", 0, -1);
         List<String> status;
         Long postId = null;
         for (String id: timeline) {
@@ -96,7 +96,12 @@ public class Database {
     }
 
     public static void follow (User user, String follow) throws RemoteException{
-        jedis.lpush(user.getHandle() + ":followers", follow);
-        jedis.lpush(follow + ":following", user.getHandle());
+        jedis.lpush(user.getHandle() + ":following", follow);
+        jedis.lpush(follow + ":followers", user.getHandle());
+    }
+
+    public static void unfollow (User user, String unfollow) throws RemoteException {
+        jedis.lrem(user.getHandle() + ":following", -1, unfollow);
+        jedis.lrem(unfollow + ":followers", -1, user.getHandle());
     }
 }

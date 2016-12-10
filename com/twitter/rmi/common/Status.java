@@ -9,8 +9,7 @@ import java.rmi.RemoteException;
 public interface Status extends Remote {
 
     // Devuelve el cuerpo del mensaje.
-    public String getContent() throws RemoteException;
-
+    public String getBody() throws RemoteException;
     // Devuelve el identificador del usuario que publico el estado.
     public String getUserHandle() throws RemoteException;
 

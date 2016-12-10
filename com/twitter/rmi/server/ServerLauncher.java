@@ -9,7 +9,7 @@ import java.rmi.registry.Registry;
  */
 public class ServerLauncher {
 
-    private static final String REGISTRY_ENDPOINT = "twitter-rmi.com";
+    private static final String REGISTRY_ENDPOINT = "localhost";
 
     public static void main(String[] args) {
         System.setProperty("java.rmi.server.hostname", REGISTRY_ENDPOINT);

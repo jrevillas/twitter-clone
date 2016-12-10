@@ -62,4 +62,9 @@ public class UserImpl extends UnicastRemoteObject implements User {
         return;
     }
 
+    @Override
+    public void unfollow(String user) throws RemoteException {
+        Database.unfollow(this, user);
+        return;
+    }
 }
