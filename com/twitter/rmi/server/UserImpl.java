@@ -70,4 +70,10 @@ public class UserImpl extends UnicastRemoteObject implements User {
         Database.unfollow(this, user);
         return;
     }
+
+    @Override
+    public List<String> getFollowers(String user) throws RemoteException {
+        return Database.getFollowers(user);
+
+    }
 }

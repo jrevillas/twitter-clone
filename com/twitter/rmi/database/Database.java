@@ -104,4 +104,8 @@ public class Database {
         jedis.lrem(user.getHandle() + ":following", -1, unfollow);
         jedis.lrem(unfollow + ":followers", -1, user.getHandle());
     }
+
+    public static List<String> getFollowers (String user) throws RemoteException {
+        return jedis.lrange(user + ":followers", 0, -1);
+    }
 }

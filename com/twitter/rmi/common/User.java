@@ -21,4 +21,6 @@ public interface User extends Remote {
     public void follow(String user) throws RemoteException;
 
     public void unfollow (String user) throws RemoteException;
+
+    public List<String> getFollowers(String user) throws RemoteException;
 }
