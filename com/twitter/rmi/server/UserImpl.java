@@ -8,6 +8,8 @@ import com.twitter.rmi.common.Status;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.database.Database;
 
+import static com.twitter.rmi.server.ServerCallbackImpl.doCallbacks;
+
 /**
  * Created by jrevillas on 06/12/2016.
  */
@@ -48,6 +50,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
     @Override
     public void submitStatus(String content) throws RemoteException {
         Database.submitStatus(this.handle, content);
+        doCallbacks(this.handle,content);
         return;
     }
 
