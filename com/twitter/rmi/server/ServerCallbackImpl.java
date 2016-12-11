@@ -2,11 +2,10 @@ package com.twitter.rmi.server;
 
 import com.twitter.rmi.common.ClientCallback;
 import com.twitter.rmi.common.ServerCallback;
-import com.twitter.rmi.common.User;
+import com.twitter.rmi.database.Database;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,10 +46,10 @@ public class ServerCallbackImpl extends UnicastRemoteObject implements ServerCal
 
         System.out.println("Empezamos los Callbacks de: @" + user);
 
-        List<User> followers = Controler.getFollowers(user);
+        List<String> followers = Database.getFollowers(user);
 
         for(int i = 0; i < followers.size(); i++){
-            callbackHashMap.get(followers.get(i).getHandle()).notifyMe("\n" +
+            callbackHashMap.get(followers.get(i)).notifyMe("\n" +
                     "++++++++++++++++++++++++++++++\n" +
                     "Status de: @" + user + "\n" +
                     "Contenido: " + content + "\n" +
