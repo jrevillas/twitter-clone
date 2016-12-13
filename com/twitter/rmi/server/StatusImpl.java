@@ -6,7 +6,7 @@ import java.rmi.server.UnicastRemoteObject;
 import com.twitter.rmi.common.Status;
 
 /**
- * Created by jrevillas on 06/12/2016.
+ * Created by jruiz on 06/12/2016.
  */
 public class StatusImpl extends UnicastRemoteObject implements Status {
 

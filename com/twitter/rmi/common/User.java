@@ -23,4 +23,9 @@ public interface User extends Remote {
     public void unfollow (String user) throws RemoteException;
 
     public List<String> getFollowers(String user) throws RemoteException;
+    public List<String> getFollowing(String user) throws RemoteException;
+
+    public String getBio() throws  RemoteException;
+    public boolean getVerified() throws RemoteException;
+    public void setBio(String bio) throws RemoteException;
 }

@@ -50,6 +50,8 @@ public class Database {
 
         userProperties.put("username", handle);
         userProperties.put("password", password);
+        userProperties.put("bio", "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.");
+        userProperties.put("verified", String.valueOf(false));
 
         jedis.hmset(handle + ":profile", userProperties);
         return user;
@@ -72,6 +74,7 @@ public class Database {
         if (userExists(handle)) {
             List<String> userPasswd = jedis.hmget(handle + ":profile", "password");
             if (userPasswd.get(0).equals(password)) {
+
                 return newUser;
             }
         }
@@ -83,12 +86,12 @@ public class Database {
         List<String> timeline = jedis.lrange("timeline", 0, -1);
         List<String> followers = jedis.lrange(handle + ":following", 0, -1);
         List<String> status;
-        Long postId = null;
+        Long postIdLocal = null;
         for (String id: timeline) {
             status = jedis.hmget(id + ":post", "user", "body");
             if (followers.contains(status.get(0)) || status.get(0).equals(handle)) {
-                postId.valueOf(id);
-                Status newStatus = new StatusImpl().setUserHandle(handle).setPostId(postId).setBody(status.get(1));
+                postIdLocal.valueOf(id);
+                Status newStatus = new StatusImpl().setUserHandle(status.get(0)).setPostId(postIdLocal).setBody(status.get(1));
                 result.add(newStatus);
             }
         }
@@ -107,5 +110,20 @@ public class Database {
 
     public static List<String> getFollowers (String user) throws RemoteException {
         return jedis.lrange(user + ":followers", 0, -1);
+    }
+
+    public static List<String> getFollowing (String user) throws RemoteException {
+        return jedis.lrange(user + ":following", 0, -1);
+    }
+
+    public static void addBio(String user, String bio) {
+        List<String> previousMap = jedis.hmget(user + ":profile", "username", "password", "verified");
+        Map<String, String> newMap = new HashMap<String, String>();
+        newMap.put("username", previousMap.get(0));
+        newMap.put("password", previousMap.get(1));
+        newMap.put("bio", bio);
+        newMap.put("verified", previousMap.get(2));
+        // jedis.del(user + ":profile");
+        jedis.hmset(user + ":profile", newMap);
     }
 }
