@@ -41,7 +41,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
         return verified;
     }
 
-    public UserImpl setVerified(boolean verified) {
+    public UserImpl setVerified(Boolean verified) {
         this.verified = verified;
         return this;
     }
@@ -103,5 +103,10 @@ public class UserImpl extends UnicastRemoteObject implements User {
     @Override
     public List<String> getFollowing(String user) throws RemoteException {
         return Database.getFollowing(user);
+    }
+
+    @Override
+    public List<User> getUsers() throws RemoteException {
+        return Database.getUsers();
     }
 }

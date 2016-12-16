@@ -28,4 +28,6 @@ public interface User extends Remote {
     public String getBio() throws  RemoteException;
     public boolean getVerified() throws RemoteException;
     public void setBio(String bio) throws RemoteException;
+
+    public List<User> getUsers() throws RemoteException;
 }
