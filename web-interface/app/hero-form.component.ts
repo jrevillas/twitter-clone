@@ -81,6 +81,7 @@ export class HeroFormComponent {
   }
 
   userHandle = '';
+  userBio = '';
 
   login() {
     console.log("Holita desde login antes de hacer post");
@@ -98,6 +99,7 @@ export class HeroFormComponent {
           this.token = data.token,
           this.userHandle = data.handle,
           this.newFollows = data.follows,
+          this.userBio = data.bio,
           console.log('Login bien, token recibido -> ', data),
           this.addToast("@" + this.userHandle, "Bienvenido a Twitter RMI.")
           this.getTimeline()
@@ -122,7 +124,9 @@ export class HeroFormComponent {
         } else {
         this.token = data.token,
         this.userHandle = data.handle,
+        this.userBio = data.bio,
         console.log('Login bien, token recibido -> ', data),
+        this.startWebSocket(),
         this.getTimeline()
         // si luego hace logout, que salga la ventana de login, no de register
         this.register = false;
@@ -164,8 +168,10 @@ export class HeroFormComponent {
   }
 
   meetNewPeople = [];
+  loadingMeetNewPeople = false;
 
   getMeetNewPeople() {
+    this.loadingMeetNewPeople = true;
     this.meetNewPeople = [];
     console.log("Holita desde getMeetNewPeople() antes de hacer cositas");
     let headers = new Headers();
@@ -174,7 +180,8 @@ export class HeroFormComponent {
     .subscribe(
       data => {
         this.meetNewPeople = data;
-        console.log('meetNewPeople bien -> ', data)
+        console.log('meetNewPeople bien -> ', data);
+        this.loadingMeetNewPeople = false;
       }
     );
   }
@@ -183,13 +190,16 @@ export class HeroFormComponent {
 
   logout() {
     var handle = this.userHandle;
-    this.webSocket.close();
+    if (this.webSocket != undefined) {
+      this.webSocket.close();
+    }
     this.timeline = [];
     this.model.name = '';
     this.model.alterEgo = '';
     this.userHandle = '';
     this.newFollows = [];
     this.token = '';
+    this.section = 0;
     this.addToast("@" + handle, "Te has desconectado correctamente.");
   }
 

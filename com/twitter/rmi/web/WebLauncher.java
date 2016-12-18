@@ -14,6 +14,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.eclipse.jetty.websocket.api.*;
 
+import redis.clients.jedis.exceptions.JedisDataException;
+
 /**
  * Created by jrevillas on 09/12/2016.
  */
@@ -147,7 +149,7 @@ public class WebLauncher {
                     .put("verified", true)
                     .put("body", "¡Bienvenido a twitter-rmi! ¿Qué tal si publicas algún tweet mientras descubres gente estupenda?")
             );
-            Thread.sleep(2000);
+            Thread.sleep(500);
             return response.toString(1);
         });
 
@@ -161,6 +163,10 @@ public class WebLauncher {
             }
             // users.put(userLogin.getHandle(), userLogin);
             JSONObject response = new JSONObject();
+            System.out.println("Bio -> " + userLogin.getBio());
+
+            // TODO @jruiz Devuelve null, el campo no se imprime
+            response.put("user", userLogin.getBio());
             response.put("handle", userLogin.getHandle());
             String token = UUID.randomUUID().toString();
             response.put("token", token);
@@ -196,11 +202,21 @@ public class WebLauncher {
             if (userAuth == null) {
                 return new JSONObject().put("error", "login incorrecto");
             }
-            JSONArray newPeople = new JSONArray()
-                    .put(new JSONObject().put("handle", "jrevillas").put("bio", "Holita qué onda amigos #caraanchoa"))
-                    .put(new JSONObject().put("handle", "javiruiz01").put("bio", "Holita lalalalalala #caraanchoa"))
-                    .put(new JSONObject().put("handle", "clara").put("bio", "#caraanchoa"))
-                    .put(new JSONObject().put("handle", "mnunez").put("bio", "Un poquito #caraanchoa"));
+            JSONArray newPeople = new JSONArray();
+
+            List<User> users = userAuth.getUsers();
+            for (User user : users) {
+                JSONObject userJSON = new JSONObject();
+                userJSON.put("handle", user.getHandle());
+                userJSON.put("bio", user.getBio());
+                if (verifiedUsers.contains(user.getHandle())) {
+                    userJSON.put("verified", true);
+                } else {
+                    userJSON.put("verified", false);
+                }
+                newPeople.put(userJSON);
+            }
+            Thread.sleep(1500);
             return newPeople.toString();
         });
 

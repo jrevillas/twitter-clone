@@ -74,30 +74,8 @@
     <div class="heroku-like-line"></div>
   </div>
 
-  <!-- Danger zone: que viene la chapuza -->
-  <!-- <iframe src="http://daetsiinf.es/public/index.html" height="10" width="10"></iframe> -->
-
   <div class="row">
     <div class="col-xs-5" style="padding-left: 20px;padding-right: 20px;">
-
-      <!-- <div class="card card-block" style="margin-bottom: 20px;padding: 1rem;">
-        <h4 class="card-title">Tu saldo</h4>
-        <p class="card-text" style="font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size: .95rem;margin-bottom: 15px;">Tu saldo actual es de <strong>{{ balance }} €</strong>. Puedes realizar hasta <strong>{{ prints() }}</strong> fotocopias más.</p>
-        <div style="text-align: left;">
-          <a href="#" (click)="openCheckout()" class="btn btn-outline-primary btn-sm">Recargar saldo</a>
-          <a href="#" (click)="requestDashboard()" class="btn btn-outline-secondary btn-sm">Información</a>
-        </div>
-      </div> -->
-
-      <style>
-        @font-face {
-          font-family: "rosettaicons";
-          src: url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.eot");
-          src: url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.eot?#iefix") format("embedded-opentype"), url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.woff") format("woff"), url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.ttf") format("truetype");
-          font-style: normal;
-          font-weight: normal;
-        }
-      </style>
 
       <div class="card card-block" style="padding: 15px 15px 15px 15px;">
         <div style="display: table-cell;padding-right: 15px;vertical-align: top;">
@@ -124,7 +102,7 @@
              style="font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
                     font-size: 14px;
                     font-weight: 300;">
-            Aenean lacinia bibendum nulla sed consectetur. Vestibulum id ligula porta felis euismod semper.
+            {{ userBio }}
           </p>
         </div>
       </div>
@@ -263,6 +241,12 @@
     </div>
 
     <div class="col-xs-7" style="margin-bottom: 75px;padding-left: 10px;padding-right: 0;" [hidden]="section != 1">
+
+      <div style="text-align: center;" [hidden]="!loadingMeetNewPeople">
+        <img style="margin-bottom: 10px;margin-top: 100px;" src="http://s3.twitter-rmi.com/resources/QzeADRN.gif">
+        <p>Please, be patient. We are looking for new<br>friends for you, it's not that easy...</p>
+      </div>
+
       <div class="row">
         <div class="card card-block"
              *ngFor="let user of meetNewPeople"
@@ -285,7 +269,7 @@
                          text-transform: none;">
                          {{ user.handle }}
               </h4>
-              <img style="display: inline-block;
+              <img *ngIf="user.verified" style="display: inline-block;
                           margin-left: 3px;
                           margin-top: -2px;"
                    src="http://s3.twitter-rmi.com/resources/vQT2A8s.png">

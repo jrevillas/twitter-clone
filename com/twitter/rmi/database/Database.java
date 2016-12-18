@@ -131,7 +131,8 @@ public class Database {
         Set<String> users = jedis.keys("*:profile");
         List<User> result = new ArrayList<>();
         for (String user: users) {
-            List<String> hmUser = jedis.hmget(user + ":profile", "username", "bio", "verified");
+            // user ahora contiene "jrevillas:profile", no es necesario añadir ":profile"
+            List<String> hmUser = jedis.hmget(user, "username", "bio", "verified");
             User newUser = new UserImpl().setHandle(hmUser.get(0)).setVerified(Boolean.valueOf(hmUser.get(2))).setPassword("hidden");
             newUser.setBio(hmUser.get(1));
             result.add(newUser);
