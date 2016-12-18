@@ -1,0 +1,73 @@
+body {
+  -webkit-font-smoothing: antialiased;
+  font-size: 1rem;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.ng-valid[required], .ng-valid.required  {
+  border-left: 5px solid #42A948; /* green */
+}
+.ng-invalid:not(form)  {
+  border-left: 5px solid #a94442; /* red */
+}
+ol.breadcrumb {
+  -webkit-font-smoothing: auto;
+  background-color: rgba(255, 255, 255, 0);
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 0;
+  padding: 0 0 10px 0;
+  text-transform: uppercase;
+}
+.card-title {
+  -webkit-font-smoothing: auto;
+  color: rgba(0, 0, 0, .75);
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+}
+.breadcrumb-item+.breadcrumb-item::before {
+  color: rgba(0, 0, 0, .25);
+  content: '»';
+  margin: 0 .5rem;
+  padding: 0;
+}
+.heroku-like-line {
+  background: linear-gradient(to right, #9e7cc1, #8ecdea);
+  border-radius: 2px;
+  height: 3px;
+  margin-bottom: 20px;
+}
+.btn-outline-primary {
+  border: none;
+  box-shadow: inset 0 0 0 1px rgba(121, 88, 159, .6);
+  color: #79589f;
+  font-weight: 600;
+  margin-right: 5px;
+  padding: .5rem .75rem;
+}
+.btn-outline-primary:hover {
+  background-color: rgba(245, 245, 245, 1);
+  color: #79589f;
+}
+.btn-outline-primary:focus {
+  background-color: rgba(255, 255, 255, 1);
+  border: none;
+  box-shadow: inset 0 0 0 1px rgba(121, 88, 159, .6);
+  color: #79589f;
+}
+.btn-outline-secondary {
+  border: none;
+  box-shadow: inset 0 0 0 1px rgba(100, 100, 100, .5);
+  color: #777;
+  font-weight: 600;
+  padding: .5rem .75rem;
+}
+.btn-outline-secondary:hover {
+  background-color: rgba(245, 245, 245, 1);
+  color: #777;
+}

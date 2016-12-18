@@ -1,0 +1,376 @@
+<style>
+  #toasty .toast .toast-text {
+    padding: 5px 20px !important;
+  }
+  #toasty .toast.toasty-theme-material .toast-text .toast-title {
+    line-height: 24px !important;
+  }
+  #toasty .toast.toasty-theme-material .toast-text .toast-msg {
+    line-height: 24px !important;
+  }
+</style>
+<ng2-toasty [position]="'top-right'"></ng2-toasty>
+<div class="container" style="padding-top: 75px;width: 325px;" [hidden]="token != ''">
+  <div>
+    <img [hidden]="register" src="http://s3.twitter-rmi.com/resources/S9m7Tg4.png" style="display: block;height: 150px;margin: 0 auto 0 auto;width: auto;">
+    <h1 style="font-family: 'Open Sans', sans-serif;font-size: 1.75em;text-align: center;-webkit-font-smoothing: antialiased;">twitter-rmi</h1>
+    <h2 style="color: rgba(0, 0, 0, .5);font-family: 'Open Sans', sans-serif;font-size: 1em;letter-spacing: .5px;margin-bottom: 25px;margin-top: -3px;font-weight: 400;text-align: center;text-transform: uppercase;-webkit-font-smoothing: antialiased;">web client - angular 2</h2>
+    <form [hidden]="register" (ngSubmit)="onSubmit()" #heroForm="ngForm">
+      <div class="form-group" style="margin-bottom: .75rem;">
+        <label for="name" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Username</label>
+        <input type="text" class="form-control" id="name"
+               required
+               [(ngModel)]="model.name" name="name"
+               #name="ngModel" >
+      </div>
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="alterEgo" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Password</label>
+        <input type="password" class="form-control" id="alterEgo"
+               [(ngModel)]="model.alterEgo" name="alterEgo" >
+      </div>
+      <div style="margin-bottom: 25px;text-align: center">
+        <button type="submit" style="margin-right: 5px;" class="btn btn-outline-primary" (click)="login()" [disabled]="!heroForm.form.valid">Log in</button>
+        <button type="button" style="margin-left: 5px;" class="btn btn-outline-secondary" (click)="register = !register">Sign up</button>
+      </div>
+    </form>
+
+    <form [hidden]="!register" (ngSubmit)="onSubmit()" #heroRegForm="ngForm">
+      <div class="form-group" style="margin-bottom: .75rem;">
+        <label for="name" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Username</label>
+        <input type="text" class="form-control" id="name"
+               required
+               [(ngModel)]="regmodel.name" name="name"
+               #name="ngModel" >
+      </div>
+      <div class="form-group" style="margin-bottom: .75rem;">
+        <label for="password1" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Password</label>
+        <input type="password" class="form-control" id="password1"
+               required
+               [(ngModel)]="regmodel.password1" name="password1" >
+      </div>
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="password2" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Password confirmation</label>
+        <input type="password" class="form-control" id="password2"
+               required
+               [(ngModel)]="regmodel.password2" name="password2" >
+      </div>
+      <div style="margin-bottom: 25px;text-align: center">
+        <button type="submit" style="margin-right: 5px;" class="btn btn-outline-primary" (click)="doRegister()" [disabled]="!heroRegForm.form.valid">Acceder</button>
+        <button type="button" style="margin-left: 5px;" class="btn btn-outline-secondary" (click)="register = !register">Volver</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<div class="container" style="padding-top: 75px;width: 875px;" [hidden]="token == ''">
+
+  <div class="row" [hidden]="!hello">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#" style="color: rgba(0, 0, 0, .65);">Twitter-rmi</a></li>
+      <li class="breadcrumb-item"><a href="#" style="color: rgba(0, 0, 0, .65);">{{ userHandle }}</a></li>
+      <li class="breadcrumb-item active" style="color: rgba(0, 0, 0, .75);">timeline</li>
+    </ol>
+    <div class="heroku-like-line"></div>
+  </div>
+
+  <!-- Danger zone: que viene la chapuza -->
+  <!-- <iframe src="http://daetsiinf.es/public/index.html" height="10" width="10"></iframe> -->
+
+  <div class="row">
+    <div class="col-xs-5" style="padding-left: 20px;padding-right: 20px;">
+
+      <!-- <div class="card card-block" style="margin-bottom: 20px;padding: 1rem;">
+        <h4 class="card-title">Tu saldo</h4>
+        <p class="card-text" style="font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size: .95rem;margin-bottom: 15px;">Tu saldo actual es de <strong>{{ balance }} €</strong>. Puedes realizar hasta <strong>{{ prints() }}</strong> fotocopias más.</p>
+        <div style="text-align: left;">
+          <a href="#" (click)="openCheckout()" class="btn btn-outline-primary btn-sm">Recargar saldo</a>
+          <a href="#" (click)="requestDashboard()" class="btn btn-outline-secondary btn-sm">Información</a>
+        </div>
+      </div> -->
+
+      <style>
+        @font-face {
+          font-family: "rosettaicons";
+          src: url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.eot");
+          src: url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.eot?#iefix") format("embedded-opentype"), url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.woff") format("woff"), url("https://abs.twimg.com/a/1481252614/font/rosetta-icons-Regular.ttf") format("truetype");
+          font-style: normal;
+          font-weight: normal;
+        }
+      </style>
+
+      <div class="card card-block" style="padding: 15px 15px 15px 15px;">
+        <div style="display: table-cell;padding-right: 15px;vertical-align: top;">
+          <img style="border-radius: 100%;display: block;height: 60px;width: 60px;"
+               src="{{ avatar(userHandle) }}">
+        </div>
+        <div style="display: table-cell;vertical-align: top;">
+          <div>
+            <h4 class="card-title"
+                style="display: inline-block;
+                       font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                       font-weight: 600;
+                       letter-spacing: normal;
+                       margin-bottom: 10px;
+                       text-transform: none;">
+                       {{ userHandle }}
+            </h4>
+            <img style="display: inline-block;
+                        margin-left: 3px;
+                        margin-top: -2px;"
+                 src="http://s3.twitter-rmi.com/resources/vQT2A8s.png">
+          </div>
+          <p class="card-text"
+             style="font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                    font-size: 14px;
+                    font-weight: 300;">
+            Aenean lacinia bibendum nulla sed consectetur. Vestibulum id ligula porta felis euismod semper.
+          </p>
+        </div>
+      </div>
+
+      <div class="list-group">
+
+        <style>
+          .activeheroku {
+            background: linear-gradient(to right, #79589f, #5a5d9f);
+            border: 1px solid #ddd;
+            border-color: #ddd;
+          }
+          .activeheroku:hover {
+            border-color: #ddd;
+          }
+          .btn-outline-primary:active {
+            background: linear-gradient(to right, #79589f, #5a5d9f);
+            border: none;
+            box-shadow: inset 0 0 0 1px rgba(121, 88, 159, .6);
+          }
+        </style>
+
+        <button type="button"
+                class="list-group-item list-group-item-action"
+                style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
+                [ngClass]="{'active activeheroku': section == 0 }"
+                (click)="section = 0; timeline = []; getTimeline()">
+          Timeline
+        </button>
+
+        <button type="button"
+                class="list-group-item list-group-item-action"
+                style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
+                [ngClass]="{'active activeheroku': section == 1 }"
+                (click)="section = 1; getMeetNewPeople()">
+          Find new people
+        </button>
+
+        <button type="button"
+                class="list-group-item list-group-item-action"
+                style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
+                [ngClass]="{'active activeheroku': section == 2 }"
+                (click)="section = 2; getMeetNewPeople()">
+          Private messages
+        </button>
+
+        <button type="button"
+                class="list-group-item list-group-item-action"
+                style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
+                [ngClass]="{'active activeheroku': section == 3 }"
+                (click)="section = 3; getMeetNewPeople()">
+          Source code
+        </button>
+
+      </div>
+
+      <div style="margin-top: 15px;text-align: center">
+        <button type="submit" data-toggle="modal" data-target="#myModal" style="margin-right: 5px;outline: 0;" class="btn btn-outline-primary">Compose tweet</button>
+        <button type="button" style="margin-left: 5px;outline: 0;" class="btn btn-outline-secondary" [disabled]="pendingTimeline" (click)="logout()">Logout</button>
+      </div>
+
+      <!-- <div style="text-align: center">
+        <button type="submit"
+                style="margin-top: 15px;outline: 0;"
+                class="btn btn-outline-primary"
+                data-toggle="modal"
+                data-target="#myModal">Publicar tweet</button>
+
+                <button style="margin-top: 15px;outline: 0;"
+                        *ngIf="!pendingTimeline"
+                        class="btn btn-outline-secondary"
+                        (click)="token = '';timeline = []">Salir</button>
+      </div> -->
+
+    </div>
+    <div class="col-xs-7" style="padding-left: 20px;padding-right: 20px;" [hidden]="section != 0">
+      <!--<div class="list-group" style="margin-bottom: 20px;">
+        <button type="button" class="list-group-item list-group-item-action" style="line-height: 16px;padding: .55rem 1rem;">
+          📝 {{ dashboardData.folders[selected].name }}
+        </button>
+      </div>-->
+
+      <div style="text-align: center;" *ngIf="isSendingTweet">
+        <img style="margin-top: 15px;" src="http://s3.twitter-rmi.com/resources/1tyj8TW.gif">
+        <p>Tu tweet está siendo enviado...</p>
+      </div>
+
+      <div style="text-align: center;" *ngIf="timeline.length == 0">
+        <img style="margin-bottom: 10px;margin-top: 100px;" src="http://s3.twitter-rmi.com/resources/QzeADRN.gif">
+        <p>Generando tu timeline...</p>
+      </div>
+
+
+      <style>
+        .noradius { border-radius: 0; }
+        .borderadius { border-top-left-radius: 4px;border-top-right-radius: 4px; }
+        .borderbottom { border-bottom-left-radius: 4px;border-bottom-right-radius: 4px; }
+      </style>
+
+      <div class="card card-block noradius"
+           *ngFor="let tweet of timeline; let i = index"
+           [ngClass]="{'borderadius': i == 0 }"
+           [ngClass]="{'borderbottom': i == timeline.length }"
+           style="margin-bottom: -1px;padding: 15px 15px 15px 15px;">
+        <div style="display: table-cell;padding-right: 15px;vertical-align: top;">
+          <img style="border-radius: 100%;display: block;height: 50px;width: 50px;"
+               src="{{ avatar(tweet.user_handler) }}">
+        </div>
+        <div style="display: table-cell;vertical-align: top;">
+          <div>
+            <h4 class="card-title"
+                style="display: inline-block;
+                       font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                       font-weight: 600;
+                       letter-spacing: normal;
+                       margin-bottom: 10px;
+                       text-transform: none;">
+                       {{ tweet.user_handler }}
+            </h4>
+            <img *ngIf="tweet.verified" style="display: inline-block;
+                        margin-left: 3px;
+                        margin-top: -2px;"
+                 src="http://s3.twitter-rmi.com/resources/vQT2A8s.png">
+          </div>
+          <p class="card-text"
+             style="font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                    font-size: 14px;
+                    font-weight: 300;">
+            {{ tweet.body }}
+          </p>
+        </div>
+      </div>
+
+      <div style="height: 100px;"></div>
+
+    </div>
+
+    <div class="col-xs-7" style="margin-bottom: 75px;padding-left: 10px;padding-right: 0;" [hidden]="section != 1">
+      <div class="row">
+        <div class="card card-block"
+             *ngFor="let user of meetNewPeople"
+             [hidden]="user.handle == userHandle"
+             style="margin-left: 50px;margin-right: 50px;padding: 10px;">
+
+          <div style="display: table-cell;padding-right: 15px;vertical-align: top;">
+            <img style="border-radius: 100%;display: block;height: 50px;width: 50px;"
+                 src="{{ avatar(user.handle) }}">
+          </div>
+
+          <div style="display: table-cell;vertical-align: top;">
+            <div>
+              <h4 class="card-title"
+                  style="display: inline-block;
+                         font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                         font-weight: 600;
+                         letter-spacing: normal;
+                         margin-bottom: 10px;
+                         text-transform: none;">
+                         {{ user.handle }}
+              </h4>
+              <img style="display: inline-block;
+                          margin-left: 3px;
+                          margin-top: -2px;"
+                   src="http://s3.twitter-rmi.com/resources/vQT2A8s.png">
+            </div>
+            <p class="card-text"
+               style="font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                      font-size: 14px;
+                      font-weight: 300;
+                      margin-bottom: .5rem">
+              {{ user.bio }}
+            </p>
+
+            <button class="btn btn-outline-primary"
+                    (click)="follow(user.handle)"
+                    *ngIf="!isFollow(user.handle)"
+                    style="font-size: .75rem;padding: .45rem .75rem;">Follow</button>
+            <button class="btn btn-outline-primary"
+                    (click)="unfollow(user.handle); addToast()"
+                    *ngIf="isFollow(user.handle)"
+                    style="background-color: #79589f;color: #fff;font-size: .75rem;padding: .45rem .75rem;">Unfollow</button>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <style>
+    .modal-title {
+      -webkit-font-smoothing: auto;
+      color: rgba(0, 0, 0, .65);
+      font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 1px;
+      margin-bottom: 0;
+      text-transform: uppercase;
+    }
+  </style>
+
+  <div class="modal fade"
+       id="myModal"
+       tabindex="-1"
+       role="dialog"
+       aria-labelledby="mySmallModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog" role="document" style="margin: 60px auto;">
+      <div class="modal-content" style="border: 0;">
+        <div class="modal-header" style="border-bottom: 0;padding: 15px 15px 10px 15px;">
+          <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button> -->
+          <h4 class="modal-title">Enviar un nuevo tweet</h4>
+        </div>
+        <div class="heroku-like-line" style="border-radius: 0;margin-bottom: 0;"></div>
+        <div class="modal-body">
+          <div class="container-fluid" style="margin-bottom: 10px;">
+            <div class="row">
+              <div class="col-xs-1">
+                <!-- <img src="http://i.imgur.com/Tcg38ie.png"> -->
+              </div>
+              <div class="col-xs-10">
+
+                   <div class="form-group">
+                     <label for="exampleTextarea">Escribe aquí tu tweet</label>
+                     <textarea [(ngModel)]="tweet" class="form-control" id="exampleTextarea" rows="3"></textarea>
+                   </div>
+
+                <div style="text-align: center;">
+                  <button class="btn btn-outline-primary" (click)="submitStatus()" data-dismiss="modal">Enviar tweet</button>
+                  <button class="btn btn-outline-secondary" style="margin-right: 5px;" data-dismiss="modal">Cancelar</button>
+                </div>
+              </div>
+              <div class="col-xs-1">
+                <!-- <img src="http://i.imgur.com/Tcg38ie.png"> -->
+              </div>
+            </div>
+          </div>
+        <!-- <div class="heroku-like-line" style="border-radius: 0;margin-bottom: 0;"></div>
+        <div class="modal-footer" style="border-top: 0;">
+        </div> -->
+      </div>
+    </div>
+  </div>
+
+</div>
