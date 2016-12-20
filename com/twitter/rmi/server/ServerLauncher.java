@@ -1,8 +1,5 @@
 package com.twitter.rmi.server;
 
-import com.twitter.rmi.common.ServerCallback;
-
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -12,7 +9,7 @@ import java.rmi.registry.Registry;
  */
 public class ServerLauncher {
 
-    private static final String REGISTRY_ENDPOINT = "localhost";
+    private static final String REGISTRY_ENDPOINT = "twitter-rmi.com";
 
     public static void main(String[] args) {
         System.setProperty("java.rmi.server.hostname", REGISTRY_ENDPOINT);
@@ -25,8 +22,6 @@ public class ServerLauncher {
 
         try {
             Registry registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-            ServerCallback exportedObj = new ServerCallbackImpl();
-            Naming.rebind("com.twitter.rmi.server.ServerCallbackImpl", exportedObj);
             registry.rebind("com.twitter.rmi.server.TwitterImpl", new TwitterImpl());
             System.out.println("[INFO] Servidor de objetos escuchando en " + REGISTRY_ENDPOINT + ":" + Registry.REGISTRY_PORT);
         } catch (Exception e) {
