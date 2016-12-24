@@ -14,4 +14,6 @@ public interface Status extends Remote {
     // Devuelve el identificador del usuario que publico el estado.
     public String getUserHandle() throws RemoteException;
 
+    public String getDate() throws RemoteException;
+
 }

@@ -129,4 +129,19 @@ public class UserImpl extends UnicastRemoteObject implements User {
             System.out.println("Fallo: Cliente no registrado: " + getHandle());
         }
     }
+
+    @Override
+    public void submitPm(String content, String receiver) throws RemoteException {
+        Database.submitPm(this.getHandle(), content, receiver);
+    }
+
+    @Override
+    public List<PrivateMessage> getSentPM() throws RemoteException {
+        return Database.getSentPM(this.getHandle());
+    }
+
+    @Override
+    public List<PrivateMessage> getReceivedPM() throws RemoteException {
+        return Database.getReceivedPM(this.getHandle());
+    }
 }

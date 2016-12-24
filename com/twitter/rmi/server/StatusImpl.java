@@ -13,9 +13,20 @@ public class StatusImpl extends UnicastRemoteObject implements Status {
     private Long postId;
     private String userHandle;
     private String body;
+    private String date;
 
     public StatusImpl() throws RemoteException {
         super();
+    }
+
+    @Override
+    public String getDate() throws RemoteException{
+        return this.date;
+    }
+
+    public StatusImpl setDate(String date) {
+        this.date = date;
+        return this;
     }
 
     public Long getPostId() throws RemoteException {

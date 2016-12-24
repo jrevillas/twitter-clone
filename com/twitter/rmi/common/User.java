@@ -35,4 +35,9 @@ public interface User extends Remote {
 
     public void unregisterForCallback(Client callbackClientObject) throws RemoteException;
 
+    public void submitPm(String content, String receiver) throws RemoteException;
+
+    public List<PrivateMessage> getSentPM () throws RemoteException;
+    public List<PrivateMessage> getReceivedPM() throws RemoteException;
+
 }
