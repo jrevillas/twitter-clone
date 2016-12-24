@@ -30,4 +30,9 @@ public interface User extends Remote {
     public void setBio(String bio) throws RemoteException;
 
     public List<User> getUsers() throws RemoteException;
+
+    public void registerForCallback(Client callbackClientObject) throws RemoteException;
+
+    public void unregisterForCallback(Client callbackClientObject) throws RemoteException;
+
 }

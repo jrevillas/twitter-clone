@@ -4,11 +4,12 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
+import com.twitter.rmi.common.Client;
 import com.twitter.rmi.common.Status;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.database.Database;
 
-import static com.twitter.rmi.server.ServerCallbackImpl.doCallbacks;
+import static com.twitter.rmi.server.ServerLauncher.*;
 
 /**
  * Created by jruiz on 06/12/2016.
@@ -19,7 +20,6 @@ public class UserImpl extends UnicastRemoteObject implements User {
     private String password;
     private String bio;
     private boolean verified;
-
 
     public UserImpl() throws RemoteException {
         super();
@@ -74,7 +74,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
     @Override
     public void submitStatus(String content) throws RemoteException {
         Database.submitStatus(this.handle, content);
-        doCallbacks(this.handle,content);
+        statusNotification(this.handle,content);
         return;
     }
 
@@ -86,6 +86,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
     @Override
     public void follow(String user) throws RemoteException {
         Database.follow(this, user);
+        followNotificacion(user,handle);
         return;
     }
 
@@ -108,5 +109,24 @@ public class UserImpl extends UnicastRemoteObject implements User {
     @Override
     public List<User> getUsers() throws RemoteException {
         return Database.getUsers();
+    }
+
+    @Override
+    public void registerForCallback(Client callbackClientObject) throws RemoteException {
+
+        if(!callbackHashMap.containsKey(getHandle())){
+            callbackHashMap.put(getHandle(),callbackClientObject);
+            System.out.println("@" + getHandle() + " se ha registrado en el Callback");
+        }
+    }
+
+    @Override
+    public void unregisterForCallback(Client callbackClientObject) throws RemoteException {
+
+        if(callbackHashMap.remove(getHandle(),callbackClientObject)){
+            System.out.println("@" + getHandle() + " se ha desregistrado para el Callback");
+        } else {
+            System.out.println("Fallo: Cliente no registrado: " + getHandle());
+        }
     }
 }

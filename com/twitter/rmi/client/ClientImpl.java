@@ -1,7 +1,6 @@
 package com.twitter.rmi.client;
 
-import com.twitter.rmi.common.ClientCallback;
-import com.twitter.rmi.server.ServerCallbackImpl;
+import com.twitter.rmi.common.Client;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -9,9 +8,9 @@ import java.rmi.server.UnicastRemoteObject;
 /**
  * Created by dmelero on 5/12/16.
  */
-public class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback {
+public class ClientImpl extends UnicastRemoteObject implements Client {
 
-    public ClientCallbackImpl() throws RemoteException {
+    public ClientImpl() throws RemoteException {
         super();
     }
 

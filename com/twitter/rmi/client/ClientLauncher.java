@@ -1,11 +1,9 @@
 package com.twitter.rmi.client;
 
-import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-import com.twitter.rmi.common.ClientCallback;
-import com.twitter.rmi.common.ServerCallback;
+import com.twitter.rmi.common.Client;
 import com.twitter.rmi.common.Twitter;
 import com.twitter.rmi.common.User;
 
@@ -15,7 +13,7 @@ import com.twitter.rmi.common.User;
 public class ClientLauncher {
 
     private static final String REGISTRY_ENDPOINT = "localhost";
-    private static String USER_NAME = "jruiz";
+    private static String USER_NAME = "dmelero";
 
     public static void main(String[] args) {
         System.setProperty("java.rmi.server.useCodebaseOnly", "false");
@@ -30,24 +28,13 @@ public class ClientLauncher {
             Registry registry = LocateRegistry.getRegistry(REGISTRY_ENDPOINT, Registry.REGISTRY_PORT);
 
             // Gestión del callback
-            ServerCallback callback = (ServerCallback) Naming.lookup("com.twitter.rmi.server.ServerCallbackImpl");
-            ClientCallback clientCallback = new ClientCallbackImpl();
-            callback.registerForCallback(USER_NAME,clientCallback);
+            Client clientCallback = new ClientImpl();
 
             // Solicitamos al registro una instancia de Twitter para empezar a operar.
             Twitter twitter = (Twitter) registry.lookup("com.twitter.rmi.server.TwitterImpl");
 
-
-            User me = twitter.login(USER_NAME, "1qazxsw2");
-
-            System.out.println("Dormimos 30 segundos");
-            try {
-                Thread.sleep(30 * 1000);
-            }
-            catch (InterruptedException ex){ // sleep over
-            }
-
-            me.submitStatus("Prueba 1 de Daniel");
+            User me = twitter.register(USER_NAME, "1qazxsw2");
+            me.registerForCallback(clientCallback);
 
             System.out.println("Dormimos 30 segundos");
             try {
@@ -56,6 +43,9 @@ public class ClientLauncher {
             catch (InterruptedException ex){ // sleep over
             }
 
+            me.submitStatus("Status para comprobar el callback");
+
+            me.unregisterForCallback(clientCallback);
 
         } catch (Exception e) {
             e.printStackTrace();
