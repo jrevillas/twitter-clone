@@ -2,17 +2,18 @@ package com.twitter.rmi.gui;
 
 import com.twitter.rmi.gui.auxiliar.GenericDomainTableModel;
 import com.twitter.rmi.gui.resources.GetImage;
+import com.twitter.rmi.common.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.MouseInputAdapter;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.text.*;
 import java.util.*;
-import java.util.List;
 
 public class GUI {
     private JFrame frame;
@@ -20,76 +21,92 @@ public class GUI {
     private JPanel panelTweets;
     private JPanel panelUsers;
     private JPanel panelProfile;
-    private JPanel panelHeader;
+    private PanelHeader panelHeader;
     private JPanel panelNewPeople;
     private JSplitPane panelBody;
-    private JLabel labelHeader;
-    private JLabel labelHeaderIcon;
     private JScrollPane scrollPaneTweets;
     private JScrollPane scrollPaneUsers;
     private JTable tableTweets;
     private JTable tableUsers;
     private JButton buttonNewPeople;
-    //    private JButton buttonExit; // TODO
+    private Component glassPane;
 
-    private GenericDomainTableModel<StatusGUI> modelTweets;
-    private GenericDomainTableModel<UserGUI> modelUsers;
+    private GenericDomainTableModel<Status> modelTweets;
+    private GenericDomainTableModel<User> modelUsers;
 
-    private UserGUI activeUser = new UserGUI("avatar1.png", "Miguel Núñez", "@mnunezdm");
+    Twitter twitter;
+    User activeUser;
     private JComboBox<String> comboNewPeople;
-    private java.util.List<UserGUI> users;
 
     /**
      * <B>FUNCTION:</B> main constructor of the interface
      */
     private GUI() {
-        this.users = new ArrayList<>();
-        this.panelGeneral = new JPanel();
-        this.panelGeneral.setLayout(new BorderLayout());
-
-        this.initializeHeader();
-
-        this.initializeBody();
+        System.setProperty("java.rmi.server.useCodebaseOnly", "false");
+//        System.setProperty("java.security.policy", "security.policy");
+//        if (System.getSecurityManager() == null)
+//            System.setSecurityManager(new SecurityManager());
+        try {
+            Registry registry = LocateRegistry.getRegistry("localhost", Registry.REGISTRY_PORT);
+            twitter = (Twitter) registry.lookup("com.twitter.rmi.server.TwitterImpl");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // ------------------------------------------------------------------
         // FRAME CONFIGURATION
 
         this.frame = new JFrame();
+        frame.getRootPane().setGlassPane(new JComponent() {
+            public void paintComponent(Graphics g) {
+                g.setColor(new Color(0, 0, 0, 100));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                super.paintComponent(g);
+            }
+        });
+        glassPane = frame.getGlassPane();
+        this.frame.setTitle("twitter-rmi");
+        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        login();
+    }
+
+    private void login() {
+        JPanel panelLogin = new PanelLogin().addFrameAction(e -> exit(), e -> frame.setState(Frame.ICONIFIED)).
+                addLogginButton(this);
+
+        this.frame.setContentPane(panelLogin);
+
+        frame.setUndecorated(true);
+        this.frame.setVisible(true);
+        this.frame.setResizable(false);
+        this.frame.pack();
+        this.frame.setLocationRelativeTo(null);
+    }
+
+    void start() {
+        this.panelGeneral = new JPanel();
+        this.panelGeneral.setLayout(new BorderLayout());
+
+        panelHeader = new PanelHeader().setType(false).addFrameAction(e -> exit(), e -> frame.setState(Frame.ICONIFIED))
+                .addAction(null,null, e -> newTweet());
+        panelGeneral.add(panelHeader, BorderLayout.NORTH);
+
+        this.initializeBody();
+
+        try {
+            modelTweets.addRows(activeUser.getTimeline());
+            modelUsers.addRows(activeUser.getFollowing(activeUser.getHandle()));
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
         this.frame.setContentPane(panelGeneral);
         this.frame.setSize(new Dimension(800, 600));
         this.frame.setLocationRelativeTo(null);
-        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.frame.setTitle("twitter-rmi");
-        // TODO
-//        this.frame.setIconImage(GetImage.getImage("icon.png").getImage());
-//        this.frame.setUndecorated(true);
         this.frame.setVisible(true);
         panelBody.setResizeWeight(1);
         panelBody.setDividerLocation(0.68);
-    }
-
-    /**
-     * <B>FUNCTION:</B> initialize all the elements in the Header Panel
-     */
-    private void initializeHeader() {
-        this.panelHeader = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        this.panelHeader.setBackground(Color.decode("#515151"));
-
-        this.labelHeaderIcon = new JLabel(GetImage.getImage("ButtonMenu.png"));
-        this.labelHeaderIcon.setBorder(new EmptyBorder(5, 15, 2, 0));
-        this.panelHeader.add(labelHeaderIcon);
-
-        this.labelHeader = new JLabel("Timeline");
-        this.labelHeader.setFont(new Font("Roboto", 0, 24));
-        this.labelHeader.setBorder(new EmptyBorder(5, 15, 2, 0));
-        this.labelHeader.setForeground(Color.decode("#c9e0ff"));
-        panelHeader.add(labelHeader);
-        // TODO
-//        this.buttonExit = new JButton("X");
-//        this.buttonExit.addActionListener(e -> System.exit(1));
-//        this.buttonExit.setForeground(Color.decode("#c9e0ff"));
-//        panelHeader.add(buttonExit);
-        panelGeneral.add(this.panelHeader, BorderLayout.NORTH);
     }
 
     /**
@@ -99,7 +116,7 @@ public class GUI {
         // -----------------------------------------------------
         // PANEL TWEETS
         panelTweets = new JPanel();
-        modelTweets = new GenericDomainTableModel<StatusGUI>(Arrays.asList(new String[]{"avatar", "textPane"})) {
+        modelTweets = new GenericDomainTableModel<Status>(Arrays.asList(new String[]{"avatar", "textPane"})) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 switch (columnIndex) {
@@ -114,15 +131,21 @@ public class GUI {
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                StatusGUI status = this.getDomainObject(rowIndex);
+                Status status = this.getDomainObject(rowIndex);
                 switch (columnIndex) {
                     case 0:
-                        return GetImage.getImage(status.getAvatar(), 72, 72);
+//                        return GetImage.getImage(status.getAvatar(), 72, 72); // TODO
+                        return GetImage.getImage("avatar1.png", 72, 72);
                     case 1:
-                        return "<html><font color=#53535353 face=\"Roboto Bold\" size=5>" + status.getName() + " </font>" +
-                                "<font color=#A9CEFF face=\"Roboto Medium\" size=4>" + status.getHandler() + " </font>" +
-                                "<font color=\"lightgrey\" face=\"Roboto Light\" size=2>" + status.getDate() + "</font><br>" +
-                                "<<font color=#23232323 face=\"Roboto Light\" size=3>" + status.getText() + "</font>";
+                        try {
+                            return "<html>" +
+                                    //                              "<font color=#53535353 face=\"Roboto Bold\" size=5>" + status.getName() + " </font>" +
+                                    "<font color=#A9CEFF face=\"Roboto Medium\" size=4>" + status.getUserHandle() + " </font>" +
+                                    //                              "<font color=\"lightgrey\" face=\"Roboto Light\" size=2>" + status.getDate() + "</font><br>" +
+                                    "<<font color=#23232323 face=\"Roboto Light\" size=3>" + status.getBody() + "</font>";
+                        } catch (RemoteException e) {
+                            return "ERROR";
+                        }
                     default:
                         return null;
                 }
@@ -146,7 +169,7 @@ public class GUI {
         // PANEL USERS
 
         panelUsers = new JPanel(new BorderLayout());
-        modelUsers = new GenericDomainTableModel<UserGUI>(Arrays.asList(new String[]{"avatar", "textPane"})) {
+        modelUsers = new GenericDomainTableModel<User>(Arrays.asList(new String[]{"avatar", "textPane"})) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 0)
@@ -159,14 +182,20 @@ public class GUI {
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                UserGUI user = this.getDomainObject(rowIndex);
+                User user = this.getDomainObject(rowIndex);
                 switch (columnIndex) {
                     case 0:
-                        return GetImage.getImage(user.getAvatar(), 50, 50);
+//                      return GetImage.getImage(user.getAvatar(), 50, 50); TODO
+                        return GetImage.getImage("avatar1.png", 50, 50);
                     case 1:
-                        return "<html><font color=#53535353 face=\"Roboto Light\" size=4>" + user.getName() + "</font><br>" +
-                                "<font color=#A9CEFF face=\"Roboto Medium\" size=3 align=right>" + user.getHandler() +
-                                "</font>";
+                        try {
+                            return "<html>" +
+                                    //                                "<font color=#53535353 face=\"Roboto Light\" size=4>" + user.getName() + "</font><br>" +
+                                    "<font color=#A9CEFF face=\"Roboto Medium\" size=3 align=right>" + user.getHandle() +
+                                    "</font>";
+                        } catch (RemoteException e) {
+                            return "ERROR";
+                        }
                     default:
                         return null;
                 }
@@ -190,14 +219,22 @@ public class GUI {
         // PANEL PROFILE
 
         // TODO
-        this.addStuff();
+//        this.addStuff();
 
         panelProfile = new JPanel(new BorderLayout());
         panelProfile.setBackground(Color.decode("#232323"));
-        JLabel labelProfileAvatar = new JLabel(GetImage.getImage(activeUser.getAvatar(), 72, 72));
+//        JLabel labelProfileAvatar = new JLabel(GetImage.getImage(activeUser.getAvatar(), 72, 72)); TODO
+        JLabel labelProfileAvatar = new JLabel(GetImage.getImage("avatar1.png", 72, 72));
         labelProfileAvatar.setBorder(new EmptyBorder(10, 10, 30, 0));
-        String profileData = "<html><font color=#FFFFFF face =\"Roboto Light\" size=5>" + activeUser.getName() +
-                "</font><br><font color=#c9e0ff face =\"Roboto Light\" size=4>" + activeUser.getHandler() + "</font>";
+        String profileData = null;
+        try {
+            profileData = "<html>" +
+                    //                    "<font color=#FFFFFF face =\"Roboto Light\" size=5>" + activeUser.getName() + "</font><br>" + TODO
+                    "<font color=#c9e0ff face =\"Roboto Light\" size=4>@" + activeUser.getHandle() + "</font>";
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
         JLabel labelProfileData = new JLabel(profileData);
         labelProfileData.setBorder(new EmptyBorder(0, 10, 10, 10));
         labelProfileData.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -221,38 +258,41 @@ public class GUI {
         });
 
         comboNewPeople = new JComboBox<>();
+        comboNewPeople.setFont(new Font("Roboto Light", 0, 14));
         comboNewPeople.setPreferredSize(new Dimension(240, 45));
         comboNewPeople.setMinimumSize(new Dimension(240, 45));
         comboNewPeople.setVisible(false);
         comboNewPeople.setEditable(true);
-
-        for (UserGUI user : users)
-            comboNewPeople.addItem(user.getHandler() + " " + user.getName());
+        try {
+            for (User user : activeUser.getUsers())
+//            comboNewPeople.addItem(user.getHandler() + " " + user.getName()); TODO
+                comboNewPeople.addItem(user.getHandle());
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
         JTextField textNewPeople = ((JTextField) comboNewPeople.getEditor().getEditorComponent());
         textNewPeople.addKeyListener(new KeyAdapter() {
             @Override
-            public void keyReleased (KeyEvent e) {
+            public void keyReleased(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     // TODO
                     comboNewPeople.setVisible(false);
                     buttonNewPeople.setVisible(true);
-                }
-                else {
-                    String string = textNewPeople.getText();
-                    comboNewPeople.removeAllItems();
-                    for (UserGUI user : users)
-                        if (user.getHandler().contains(string) || user.getName().contains(string))
-                            comboNewPeople.addItem(user.getHandler() + " " + user.getName());
-                    textNewPeople.setText(string);
-                    comboNewPeople.showPopup();
+                } else {
+                    try {
+                        String string = textNewPeople.getText();
+                        comboNewPeople.removeAllItems();
+                        for (User user : activeUser.getUsers())
+                            if (user.getHandle().contains(string)) // || user.getName().contains(string)) TODO
+                                comboNewPeople.addItem(user.getHandle()); // + " " + user.getName());
+                        textNewPeople.setText(string);
+                        comboNewPeople.showPopup();
+                    } catch (RemoteException e1) {
+                        e1.printStackTrace();
+                    }
                 }
             }
         });
-
-        textNewPeople.setText("");
-        textNewPeople.setPreferredSize(new Dimension(240, 45));
-        textNewPeople.setMinimumSize(new Dimension(240, 45));
-        textNewPeople.setMaximumSize(new Dimension(240, 45));
 
         panelNewPeople.add(buttonNewPeople);
         panelNewPeople.add(comboNewPeople);
@@ -270,50 +310,101 @@ public class GUI {
         panelGeneral.add(panelBody, BorderLayout.CENTER);
     }
 
-    /**
-     * <B>FUNCTION:</B> hard-code data into the interface
-     */
-    private void addStuff() {
-        StatusGUI status1 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar1.png");
-        modelTweets.addRow(status1);
-        StatusGUI status2 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar2.png");
-        modelTweets.addRow(status2);
-        StatusGUI status3 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar3.png");
-        modelTweets.addRow(status3);
-        StatusGUI status4 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar4.png");
-        modelTweets.addRow(status4);
-        StatusGUI status5 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar1.png");
-        modelTweets.addRow(status5);
-        StatusGUI status6 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar2.png");
-        modelTweets.addRow(status6);
-        StatusGUI status7 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar3.png");
-        modelTweets.addRow(status7);
-        StatusGUI status8 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar4.png");
-        modelTweets.addRow(status8);
-        StatusGUI status9 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar1.png");
-        modelTweets.addRow(status9);
-
-        UserGUI hum1 = new UserGUI("avatar4.png", "Clara", "@clara");
-        users.add(hum1);
-        activeUser.addFriend(hum1);
-        UserGUI hum3 = new UserGUI("avatar3.png", "Javier Revillas", "@jrevillas");
-        users.add(hum3);
-        activeUser.addFriend(hum3);
-        UserGUI hum4 = new UserGUI("avatar4.png", "Javier Ruiz", "@jruiz");
-        users.add(hum4);
-        activeUser.addFriend(hum4);
-        UserGUI hum5 = new UserGUI("avatar1.png", "Daniel Melero", "@dmelero");
-        users.add(hum5);
-        UserGUI hum6 = new UserGUI("avatar2.png", "Victor Blazquez", "@vbgalache");
-        users.add(hum6);
-        UserGUI hum7 = new UserGUI("avatar3.png", "Marcos Núñez", "@marcosnunez");
-        users.add(hum7);
-        UserGUI hum8 = new UserGUI("avatar4.png", "Jorge Pelos", "@pelosjorge");
-        users.add(hum8);
-        this.modelUsers.addRows(activeUser.getFriends());
-
+    private void newTweet() {
+        glassPane.setVisible(true);
+        frame.setEnabled(false);
+        DialogTweet dialogTweet = new DialogTweet();
+        dialogTweet.setUndecorated(true);
+        dialogTweet.pack();
+        dialogTweet.setLocationRelativeTo(panelGeneral);
+        dialogTweet.setResizable(false);
+        dialogTweet.setVisible(true);
+        dialogTweet.setGUI(this);
+//        dialogTweet.getResult(); TODO
+//        glassPane.setVisible(false);
+//        frame.setEnabled(true);
+//        System.out.println(result);
     }
 
+    void continueNewTweet (String result){
+        glassPane.setVisible(false); // TODO
+        frame.setEnabled(true);
+        System.out.println(result);
+    }
+
+    private void exit() {
+        System.exit(0);
+    }
+
+
+    private static String timeSince(String date) {
+        try {
+            DateFormat format = new SimpleDateFormat("HH:mm dd/MM/yy");
+            long dateNow = new Date().getTime();
+            long dateStatus;
+            dateStatus = format.parse(date).getTime();
+            long diff = (dateNow - dateStatus) / 1000;
+            if (diff < 60)
+                return "just now";
+            if (diff < 60 + 60)
+                return "a minute ago";
+            if (diff < 60 * 60)
+                return (int) diff / 60 + " minutes ago";
+            if (diff < 60 * 60 * 2)
+                return "an hour ago";
+            if (diff < 60 * 60 * 24)
+                return (int) diff / 3600 + " hours ago";
+            if (diff < 86400 * 365)
+                return date.substring(6, 11);
+            return date.substring(6);
+        } catch (Exception e) {
+            return "before the big bang";
+        }
+    }
+
+    /**
+     * <B>FUNCTION:</B> hard-code data into the interface
+     * <p>
+     * private void addStuff() {
+     * StatusGUI status1 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar1.png");
+     * modelTweets.addRow(status1);
+     * StatusGUI status2 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar2.png");
+     * modelTweets.addRow(status2);
+     * StatusGUI status3 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar3.png");
+     * modelTweets.addRow(status3);
+     * StatusGUI status4 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar4.png");
+     * modelTweets.addRow(status4);
+     * StatusGUI status5 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar1.png");
+     * modelTweets.addRow(status5);
+     * StatusGUI status6 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar2.png");
+     * modelTweets.addRow(status6);
+     * StatusGUI status7 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar3.png");
+     * modelTweets.addRow(status7);
+     * StatusGUI status8 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar4.png");
+     * modelTweets.addRow(status8);
+     * StatusGUI status9 = new StatusGUI("Miguel Núñez", "@mnunezdm", "Hola este es un mensaje", "avatar1.png");
+     * modelTweets.addRow(status9);
+     * <p>
+     * UserGUI hum1 = new UserGUI("avatar4.png", "Clara", "@clara");
+     * users.add(hum1);
+     * activeUser.addFriend(hum1);
+     * UserGUI hum3 = new UserGUI("avatar3.png", "Javier Revillas", "@jrevillas");
+     * users.add(hum3);
+     * activeUser.addFriend(hum3);
+     * UserGUI hum4 = new UserGUI("avatar4.png", "Javier Ruiz", "@jruiz");
+     * users.add(hum4);
+     * activeUser.addFriend(hum4);
+     * UserGUI hum5 = new UserGUI("avatar1.png", "Daniel Melero", "@dmelero");
+     * users.add(hum5);
+     * UserGUI hum6 = new UserGUI("avatar2.png", "Victor Blazquez", "@vbgalache");
+     * users.add(hum6);
+     * UserGUI hum7 = new UserGUI("avatar3.png", "Marcos Núñez", "@marcosnunez");
+     * users.add(hum7);
+     * UserGUI hum8 = new UserGUI("avatar4.png", "Jorge Pelos", "@pelosjorge");
+     * users.add(hum8);
+     * this.modelUsers.addRows(activeUser.getFriends());
+     * }
+     */
     public static void main(String[] args) {
         new GUI();
     }

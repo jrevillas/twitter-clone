@@ -8,9 +8,11 @@ import javax.swing.*;
 public class GetImage {
 
     public static ImageIcon getImage(String name, int height, int width) {
+//        ImageIcon icon = new ImageIcon(GetImage.class.getResource(name));
         ImageIcon icon = new ImageIcon(GetImage.class.getResource(name));
+
         return new ImageIcon(icon.getImage()
-                .getScaledInstance(height, width,  java.awt.Image.SCALE_SMOOTH));
+                .getScaledInstance(width, height,  java.awt.Image.SCALE_SMOOTH));
     }
 
     public static ImageIcon getImage(String name) {
