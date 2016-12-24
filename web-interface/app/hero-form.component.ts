@@ -45,6 +45,8 @@ export class HeroFormComponent {
   updateChat(msg) {
     let jsonMsg = JSON.parse(msg.data);
     this.addToast("@" + this.userHandle, jsonMsg.msg);
+    let tweet = {user_handler: "twitter-rmi", body: jsonMsg.msg, verify: false};
+    this.timeline.unshift(tweet);
     console.log("[WEBSOCKETS] " + msg.data);
   }
 
@@ -61,23 +63,15 @@ export class HeroFormComponent {
   startWebSocket() {
     this.webSocket = new WebSocket(this.wsEndpoint);
     this.webSocket.onmessage = msg => this.updateChat(msg);
-    this.webSocket.onclose = _ => this.addToast("Twitter RMI", "Cerrada la conexión de notificaciones.");
+    this.webSocket.onclose = _ => {
+      this.addToast("Twitter RMI", "Cerrada la conexión de notificaciones.");
+      if (this.userHandle != '') {
+        this.startWebSocket();
+      }
+    }
     // this.webSocket.send(this.userHandle);
     this.webSocket.onopen = _ => this.webSocket.send("handle:" + this.userHandle);
     console.log("WebSocket conectado.");
-  }
-
-  postToken() {
-    console.log("Holitasss desde postToken 1");
-    var body = 'stripeToken=' + this.tokenFinal;
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/x-www-form-urlencoded');
-    return this.http.post('https://jre.villas/stripe', body, {headers: headers})
-    .map(response => response.json())
-    .subscribe(
-      data => console.log('Login bien, token recibido -> ', data),
-      error => console.log('Login no valido')
-    );
   }
 
   userHandle = '';
@@ -163,6 +157,29 @@ export class HeroFormComponent {
         console.log('submitStatus() bien -> ', data),
         // this.addToast("@" + this.userHandle, "Tu tweet se ha enviado correctamente.")
         this.getTimeline()
+      }
+    );
+  }
+
+  pmTo = '';
+  pmBody = '';
+
+  submitPM() {
+    console.log("Holita desde submitPM() antes de hacer post");
+    let body = '{"to": "' + this.pmTo + '", "body": "' + this.pmBody + '"}';
+    console.log(body);
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/x-www-form-urlencoded');
+    this.isSendingTweet = true;
+    return this.http.post(this.endpoint + 'pm/' + this.token, body, {headers: headers})
+    .map(response => response.json())
+    .subscribe(
+      data => {
+        this.pmTo = '';
+        this.pmBody = '';
+        console.log('submitPM() bien -> ', data)
+        // this.addToast("@" + this.userHandle, "Tu tweet se ha enviado correctamente.")
+        // this.getTimeline()
       }
     );
   }

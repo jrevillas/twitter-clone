@@ -113,21 +113,12 @@ public class UserImpl extends UnicastRemoteObject implements User {
 
     @Override
     public void registerForCallback(Client callbackClientObject) throws RemoteException {
-
-        if(!callbackHashMap.containsKey(getHandle())){
-            callbackHashMap.put(getHandle(),callbackClientObject);
-            System.out.println("@" + getHandle() + " se ha registrado en el Callback");
-        }
+      ServerLauncher.subscribe(this.getHandle(), callback);
     }
 
     @Override
     public void unregisterForCallback(Client callbackClientObject) throws RemoteException {
-
-        if(callbackHashMap.remove(getHandle(),callbackClientObject)){
-            System.out.println("@" + getHandle() + " se ha desregistrado para el Callback");
-        } else {
-            System.out.println("Fallo: Cliente no registrado: " + getHandle());
-        }
+      ServerLauncher.unsubscribe(this.getHandle(), callback);
     }
 
     @Override

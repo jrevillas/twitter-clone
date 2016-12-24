@@ -3,11 +3,13 @@ package com.twitter.rmi.web;
 import static spark.Spark.*;
 
 import java.io.IOException;
+import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.twitter.rmi.client.ClientCallbackImpl;
 import com.twitter.rmi.common.*;
 
 import org.json.JSONArray;
@@ -21,7 +23,7 @@ import redis.clients.jedis.exceptions.JedisDataException;
  */
 public class WebLauncher {
 
-    private static final String REGISTRY_ENDPOINT = "twitter-rmi.com";
+    private static final String REGISTRY_ENDPOINT = "localhost";
     private static Twitter twitter;
     private static List<String> verifiedUsers;
     private static Map<String, User> tokens;
@@ -29,6 +31,9 @@ public class WebLauncher {
     static Map<String, Session> userMap = new ConcurrentHashMap<>();
     static Map<String, Session> socketConnections = new ConcurrentHashMap<>();
     static int nextUserNumber = 1;
+
+    public static ServerCallback callback;
+    public static ClientCallback clientCallback;
 
     public static void sendMessage(String username, String message) {
         Session session = socketConnections.get(username);
@@ -107,6 +112,14 @@ public class WebLauncher {
             // System.out.format("Nombre de usuario: %s\n", user.getHandle());
             // user.submitStatus("holita son las " + System.currentTimeMillis());
 
+
+            // A VER, ESTO DEBE IR EN EL LOGIN (y en el registro).
+            // Y SE TIENE QUE MANEJAR PARA MUCHOS CLIENTES.
+            callback = (ServerCallback) Naming.lookup("com.twitter.rmi.server.ServerCallbackImpl");
+            clientCallback = new ClientCallbackImpl();
+            // callback.registerForCallback("jrevillas", clientCallback);
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -165,15 +178,26 @@ public class WebLauncher {
             JSONObject response = new JSONObject();
             System.out.println("Bio -> " + userLogin.getBio());
 
-            // TODO @jruiz Devuelve null, el campo no se imprime
-            response.put("user", userLogin.getBio());
+            response.put("bio", userLogin.getBio());
             response.put("handle", userLogin.getHandle());
             String token = UUID.randomUUID().toString();
             response.put("token", token);
-            response.put("follows", userLogin.getFollowing(req.params(":username")));
+
+            // response.put("follows", userLogin.getFollowing(req.params(":username")));
+            List<User> following = userLogin.getFollowing(req.params(":username"));
+            JSONArray followingJSON = new JSONArray();
+            for (User user : following) {
+                followingJSON.put(user.getHandle());
+            }
+            response.put("follows", followingJSON);
+
             tokens.put(token, userLogin);
             System.out.println("Logged in as " + userLogin.getHandle());
             System.out.println("login() -> " + userLogin.getHandle() + " - " + token);
+
+            ClientCallback callback = new ClientCallbackImpl();
+            userLogin.pushSubscribe(callback);
+
             return response.toString(1);
         });
 
@@ -190,6 +214,8 @@ public class WebLauncher {
             response.put("handle", userLogin.getHandle());
             String token = UUID.randomUUID().toString();
             response.put("token", token);
+            response.put("follows", new JSONArray());
+            response.put("bio", userLogin.getBio());
             tokens.put(token, userLogin);
             System.out.println("Logged in as " + userLogin.getHandle());
             System.out.println("login() -> " + userLogin.getHandle() + " - " + token);
@@ -252,6 +278,28 @@ public class WebLauncher {
 
             Thread.sleep(2000);
             userAuth.submitStatus(new String(req.body().getBytes(), "UTF-8"));
+            return new JSONObject().put("status", "ok");
+        });
+
+        post("/pm/:token", (req, res) -> {
+            res.type("application/json");
+
+            User userAuth = tokens.get(req.params(":token"));
+            if (userAuth == null) {
+                return new JSONObject().put("error", "login incorrecto");
+            }
+
+            Thread.sleep(2000);
+
+            JSONObject body = new JSONObject(new String(req.body().getBytes()));
+
+            System.out.println("[PM] from " + userAuth.getHandle());
+            System.out.println("[PM] to " + body.getString("to"));
+            System.out.println("[PM] body " + body.getString("body"));
+
+            userAuth.submitPm(body.getString("body"), body.getString("to"));
+
+            //userAuth.submitStatus(new String(req.body().getBytes(), "UTF-8"));
             return new JSONObject().put("status", "ok");
         });
 

@@ -10,11 +10,11 @@
   }
 </style>
 <ng2-toasty [position]="'top-right'"></ng2-toasty>
-<div class="container" style="padding-top: 75px;width: 325px;" [hidden]="token != ''">
+<div class="container" style="padding-top: 100px;width: 325px;" [hidden]="token != ''">
   <div>
-    <img [hidden]="register" src="http://s3.twitter-rmi.com/resources/S9m7Tg4.png" style="display: block;height: 150px;margin: 0 auto 0 auto;width: auto;">
-    <h1 style="font-family: 'Open Sans', sans-serif;font-size: 1.75em;text-align: center;-webkit-font-smoothing: antialiased;">twitter-rmi</h1>
-    <h2 style="color: rgba(0, 0, 0, .5);font-family: 'Open Sans', sans-serif;font-size: 1em;letter-spacing: .5px;margin-bottom: 25px;margin-top: -3px;font-weight: 400;text-align: center;text-transform: uppercase;-webkit-font-smoothing: antialiased;">web client - angular 2</h2>
+    <img [hidden]="register" src="http://s3.twitter-rmi.com/resources/upm-twitter.png" style="display: block;height: 125px;margin: 0 auto 0 auto;width: auto;">
+    <h1 [hidden]="!register" style="font-family: 'Open Sans', sans-serif;font-size: 1.75em;text-align: center;-webkit-font-smoothing: antialiased;">twitter-rmi</h1>
+    <h2 style="color: rgba(0, 0, 0, .5);font-family: 'Open Sans', sans-serif;font-size: 1em;letter-spacing: .4px;margin-bottom: 25px;margin-top: 12px;font-weight: 400;text-align: center;text-transform: uppercase;-webkit-font-smoothing: antialiased;">web client - angular 2</h2>
     <form [hidden]="register" (ngSubmit)="onSubmit()" #heroForm="ngForm">
       <div class="form-group" style="margin-bottom: .75rem;">
         <label for="name" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Username</label>
@@ -145,7 +145,9 @@
                 class="list-group-item list-group-item-action"
                 style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
                 [ngClass]="{'active activeheroku': section == 2 }"
-                (click)="section = 2; getMeetNewPeople()">
+                data-toggle="modal"
+                data-target="#pmModal"
+                (click)="section = 2">
           Private messages
         </button>
 
@@ -153,7 +155,7 @@
                 class="list-group-item list-group-item-action"
                 style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
                 [ngClass]="{'active activeheroku': section == 3 }"
-                (click)="section = 3; getMeetNewPeople()">
+                (click)="section = 3">
           Source code
         </button>
 
@@ -164,26 +166,8 @@
         <button type="button" style="margin-left: 5px;outline: 0;" class="btn btn-outline-secondary" [disabled]="pendingTimeline" (click)="logout()">Logout</button>
       </div>
 
-      <!-- <div style="text-align: center">
-        <button type="submit"
-                style="margin-top: 15px;outline: 0;"
-                class="btn btn-outline-primary"
-                data-toggle="modal"
-                data-target="#myModal">Publicar tweet</button>
-
-                <button style="margin-top: 15px;outline: 0;"
-                        *ngIf="!pendingTimeline"
-                        class="btn btn-outline-secondary"
-                        (click)="token = '';timeline = []">Salir</button>
-      </div> -->
-
     </div>
     <div class="col-xs-7" style="padding-left: 20px;padding-right: 20px;" [hidden]="section != 0">
-      <!--<div class="list-group" style="margin-bottom: 20px;">
-        <button type="button" class="list-group-item list-group-item-action" style="line-height: 16px;padding: .55rem 1rem;">
-          📝 {{ dashboardData.folders[selected].name }}
-        </button>
-      </div>-->
 
       <div style="text-align: center;" *ngIf="isSendingTweet">
         <img style="margin-top: 15px;" src="http://s3.twitter-rmi.com/resources/1tyj8TW.gif">
@@ -321,9 +305,6 @@
     <div class="modal-dialog" role="document" style="margin: 60px auto;">
       <div class="modal-content" style="border: 0;">
         <div class="modal-header" style="border-bottom: 0;padding: 15px 15px 10px 15px;">
-          <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button> -->
           <h4 class="modal-title">Enviar un nuevo tweet</h4>
         </div>
         <div class="heroku-like-line" style="border-radius: 0;margin-bottom: 0;"></div>
@@ -331,7 +312,6 @@
           <div class="container-fluid" style="margin-bottom: 10px;">
             <div class="row">
               <div class="col-xs-1">
-                <!-- <img src="http://i.imgur.com/Tcg38ie.png"> -->
               </div>
               <div class="col-xs-10">
 
@@ -341,20 +321,58 @@
                    </div>
 
                 <div style="text-align: center;">
-                  <button class="btn btn-outline-primary" (click)="submitStatus()" data-dismiss="modal">Enviar tweet</button>
-                  <button class="btn btn-outline-secondary" style="margin-right: 5px;" data-dismiss="modal">Cancelar</button>
+                  <button class="btn btn-outline-primary" (click)="submitStatus()" data-dismiss="modal">Send tweet</button>
+                  <button class="btn btn-outline-secondary" style="margin-right: 5px;" data-dismiss="modal">Cancel</button>
                 </div>
               </div>
-              <div class="col-xs-1">
-                <!-- <img src="http://i.imgur.com/Tcg38ie.png"> -->
-              </div>
+              <div class="col-xs-1"></div>
             </div>
           </div>
-        <!-- <div class="heroku-like-line" style="border-radius: 0;margin-bottom: 0;"></div>
-        <div class="modal-footer" style="border-top: 0;">
-        </div> -->
       </div>
     </div>
   </div>
+</div>
 
+  <div class="modal fade"
+       id="pmModal"
+       tabindex="-1"
+       role="dialog"
+       aria-labelledby="mySmallModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog" role="document" style="margin: 60px auto;">
+      <div class="modal-content" style="border: 0;">
+        <div class="modal-header" style="border-bottom: 0;padding: 15px 15px 10px 15px;">
+          <h4 class="modal-title">Enviar un mensaje privado</h4>
+        </div>
+        <div class="heroku-like-line" style="border-radius: 0;margin-bottom: 0;"></div>
+        <div class="modal-body">
+          <div class="container-fluid" style="margin-bottom: 10px;">
+            <div class="row">
+              <div class="col-xs-1">
+              </div>
+              <div class="col-xs-10">
+
+                <div class="input-group">
+                  <span class="input-group-addon" id="basic-addon1">@</span>
+                  <input [(ngModel)]="pmTo" type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+                </div>
+
+                <br>
+
+                <div class="form-group">
+                  <label for="exampleTextarea">Contenido del mensaje</label>
+                  <textarea [(ngModel)]="pmBody" class="form-control" id="exampleTextarea" rows="3"></textarea>
+                </div>
+
+                <div style="text-align: center;">
+                  <button class="btn btn-outline-primary" (click)="submitPM()" data-dismiss="modal">Send</button>
+                  <button class="btn btn-outline-secondary" style="margin-right: 5px;" data-dismiss="modal">Cancel</button>
+                </div>
+              </div>
+              <div class="col-xs-1"></div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,13 +1,14 @@
 package com.twitter.rmi.server;
 
-import com.twitter.rmi.common.Client;
-import com.twitter.rmi.database.Database;
+import com.twitter.rmi.common.ClientCallback;
+import com.twitter.rmi.common.ServerCallback;
 
+import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 /**
  * Created by jrevillas on 06/12/2016.
@@ -15,31 +16,21 @@ import java.util.List;
 public class ServerLauncher {
 
     private static final String REGISTRY_ENDPOINT = "localhost";
-    public static HashMap<String,Client> callbackHashMap = null;
+    public static Map<String, ClientCallback> callbacks = new HashMap<String, ClientCallback>();
 
-    static {
-        callbackHashMap = new HashMap<>();
+    public static void subscribe(String username, ClientCallback callback) {
+        callbacks.put(username, callback);
+        System.out.println("Se ha registrado un callback para " + username);
     }
 
-    public static synchronized void statusNotification(String user, String content) throws RemoteException {
-
-        List<String> followers = Database.getFollowers(user);
-
-        for(int i = 0; i < followers.size(); i++){
-            callbackHashMap.get(followers.get(i)).notifyMe("\n" +
-                    "++++++++++++++++++++++++++++++\n" +
-                    "Status de: @" + user + "\n" +
-                    "Contenido: " + content + "\n" +
-                    "++++++++++++++++++++++++++++++\n");
+    // Elimina el callback especificado. Si .remove() recibe dos parametros, solo lo elimina del mapa
+    // si esa clave guarda la referencia pasada como segundo argumento.
+    public static void unsubscribe(String username, ClientCallback callback) {
+        if (callbacks.remove(username, callback)) {
+            System.out.println("Se ha eliminado un callback de " + username);
+        } else {
+            System.out.println("No se ha podido eliminar un callback de " + username);
         }
-    }
-
-    public static synchronized void followNotificacion(String following, String follower) throws RemoteException {
-
-        callbackHashMap.get(following).notifyMe("\n" +
-                "++++++++++++++++++++++++++++++\n" +
-                "Te esta siguiento: @" + follower + "\n" +
-                "++++++++++++++++++++++++++++++\n");
     }
 
     public static void main(String[] args) {
@@ -53,6 +44,8 @@ public class ServerLauncher {
 
         try {
             Registry registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+            ServerCallback exportedObj = new ServerCallbackImpl();
+            Naming.rebind("com.twitter.rmi.server.ServerCallbackImpl", exportedObj);
             registry.rebind("com.twitter.rmi.server.TwitterImpl", new TwitterImpl());
             System.out.println("[INFO] Servidor de objetos escuchando en " + REGISTRY_ENDPOINT + ":" + Registry.REGISTRY_PORT);
         } catch (Exception e) {
