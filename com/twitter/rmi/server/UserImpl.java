@@ -4,12 +4,11 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
-import com.twitter.rmi.common.Client;
+import com.twitter.rmi.common.ClientCallback;
+import com.twitter.rmi.common.PrivateMessage;
 import com.twitter.rmi.common.Status;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.database.Database;
-
-import static com.twitter.rmi.server.ServerLauncher.*;
 
 /**
  * Created by jruiz on 06/12/2016.
@@ -21,6 +20,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
     private String bio;
     private boolean verified;
 
+
     public UserImpl() throws RemoteException {
         super();
     }
@@ -28,6 +28,11 @@ public class UserImpl extends UnicastRemoteObject implements User {
     @Override
     public String getBio() throws RemoteException {
         return bio;
+    }
+
+    public UserImpl _setBio (String bio) {
+        this.bio = bio;
+        return this;
     }
 
     @Override
@@ -67,72 +72,85 @@ public class UserImpl extends UnicastRemoteObject implements User {
 
     @Override
     public List<Status> getTimeline() throws RemoteException {
+        System.out.println(this.getHandle() + " -> getTimeline()");
         List<Status> result = Database.getTimeline(this.getHandle());
         return result;
     }
 
     @Override
     public void submitStatus(String content) throws RemoteException {
+        System.out.println(this.getHandle() + " -> submitStatus(...)");
         Database.submitStatus(this.handle, content);
-        statusNotification(this.handle,content);
-        return;
+        ServerCallbackImpl.notifyOnTweet(this.handle, content);
     }
 
     @Override
     public void updatePassword(String password) throws RemoteException {
+        System.out.println(this.getHandle() + " -> updatePassword(...)");
         return;
     }
 
     @Override
     public void follow(String user) throws RemoteException {
+        System.out.println(this.getHandle() + " -> follow(" + user + ")");
         Database.follow(this, user);
-        followNotificacion(user,handle);
         return;
     }
 
     @Override
     public void unfollow(String user) throws RemoteException {
+        System.out.println(this.getHandle() + " -> follow(" + user + ")");
         Database.unfollow(this, user);
         return;
     }
 
     @Override
-    public List<String> getFollowers(String user) throws RemoteException {
+    public List<User> getFollowers(String user) throws RemoteException {
+        System.out.println(this.getHandle() + " -> getFollowers(...)");
         return Database.getFollowers(user);
     }
 
     @Override
-    public List<String> getFollowing(String user) throws RemoteException {
+    public List<User> getFollowing(String user) throws RemoteException {
+        System.out.println(this.getHandle() + " -> getFollowing(...)");
         return Database.getFollowing(user);
     }
 
     @Override
     public List<User> getUsers() throws RemoteException {
+        System.out.println(this.getHandle() + " -> getUsers()");
         return Database.getUsers();
     }
 
     @Override
-    public void registerForCallback(Client callbackClientObject) throws RemoteException {
-      ServerLauncher.subscribe(this.getHandle(), callback);
+    public void pushSubscribe(ClientCallback callback) throws RemoteException {
+        System.out.println(this.getHandle() + " -> pushSubscribe(...)");
+        ServerLauncher.subscribe(this.getHandle(), callback);
     }
 
     @Override
-    public void unregisterForCallback(Client callbackClientObject) throws RemoteException {
-      ServerLauncher.unsubscribe(this.getHandle(), callback);
+    public void pushUnsubscribe(ClientCallback callback) throws RemoteException {
+        System.out.println(this.getHandle() + " -> pushUnsubscribe(...)");
+        ServerLauncher.unsubscribe(this.getHandle(), callback);
     }
 
     @Override
     public void submitPm(String content, String receiver) throws RemoteException {
+        System.out.println(this.getHandle() + " -> submitPM(...)");
         Database.submitPm(this.getHandle(), content, receiver);
     }
 
     @Override
     public List<PrivateMessage> getSentPM() throws RemoteException {
+        System.out.println(this.getHandle() + " -> getSentPM()");
         return Database.getSentPM(this.getHandle());
     }
 
+
     @Override
     public List<PrivateMessage> getReceivedPM() throws RemoteException {
+        System.out.println(this.getHandle() + " -> getReceivedPM()");
         return Database.getReceivedPM(this.getHandle());
     }
+
 }

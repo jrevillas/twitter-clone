@@ -22,8 +22,8 @@ public interface User extends Remote {
 
     public void unfollow (String user) throws RemoteException;
 
-    public List<String> getFollowers(String user) throws RemoteException;
-    public List<String> getFollowing(String user) throws RemoteException;
+    public List<User> getFollowers(String user) throws RemoteException;
+    public List<User> getFollowing(String user) throws RemoteException;
 
     public String getBio() throws  RemoteException;
     public boolean getVerified() throws RemoteException;
@@ -31,9 +31,8 @@ public interface User extends Remote {
 
     public List<User> getUsers() throws RemoteException;
 
-    public void registerForCallback(Client callbackClientObject) throws RemoteException;
-
-    public void unregisterForCallback(Client callbackClientObject) throws RemoteException;
+    public void pushSubscribe(ClientCallback callbackClient) throws RemoteException;
+    public void pushUnsubscribe(ClientCallback callbackClient) throws RemoteException;
 
     public void submitPm(String content, String receiver) throws RemoteException;
 

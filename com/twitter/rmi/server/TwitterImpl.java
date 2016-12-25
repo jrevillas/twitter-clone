@@ -25,16 +25,20 @@ public class TwitterImpl extends UnicastRemoteObject implements Twitter {
     @Override
     public User login(String handle, String password) throws RemoteException{
         User user = Database.login(handle, password);
-        if (user != null)
+        if (user != null) {
+            System.out.println(handle + " -> login(...)");
             return user;
+        }
         return null;
     }
 
     @Override
     public User register(String handle, String password) throws RemoteException{
         User user = Database.register(handle, password);
-        if (user != null)
+        if (user != null) {
+            System.out.println(handle + " -> register(...)");
             return user;
+        }
         return null;
     }
 
