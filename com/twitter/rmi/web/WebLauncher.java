@@ -3,7 +3,6 @@ package com.twitter.rmi.web;
 import static spark.Spark.*;
 
 import java.io.IOException;
-import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.*;
@@ -115,7 +114,7 @@ public class WebLauncher {
 
             // A VER, ESTO DEBE IR EN EL LOGIN (y en el registro).
             // Y SE TIENE QUE MANEJAR PARA MUCHOS CLIENTES.
-            callback = (ServerCallback) Naming.lookup("com.twitter.rmi.server.ServerCallbackImpl");
+            callback = (ServerCallback) registry.lookup("com.twitter.rmi.server.ServerCallbackImpl");
             clientCallback = new ClientCallbackImpl();
             // callback.registerForCallback("jrevillas", clientCallback);
 
@@ -129,6 +128,26 @@ public class WebLauncher {
         get("/notify", (req, res) -> {
             broadcastMessage("HTTP-server", new JSONObject().put("msg", "Notificación de prueba.").toString());
             return "OK";
+        });
+
+        get("/getpm/:token", (req, res) -> {
+            res.type("application/json;charset=utf-8");
+
+            User user = tokens.get(req.params(":token"));
+            if (user == null) {
+                return new JSONObject().put("error", "token is not valid");
+            }
+
+            List<PrivateMessage> pmList = user.getReceivedPM();
+            JSONArray result = new JSONArray();
+            for (PrivateMessage pm : pmList) {
+                result.put(new JSONObject()
+                .put("sender", pm.getSender())
+                .put("to", pm.getReceiver())
+                .put("body", pm.getBody())
+                .put("timestamp", pm.getDate()));
+            }
+            return result.toString(1);
         });
 
         get("/timeline/:token", (req, res) -> {
@@ -291,7 +310,7 @@ public class WebLauncher {
 
             Thread.sleep(2000);
 
-            JSONObject body = new JSONObject(new String(req.body().getBytes()));
+            JSONObject body = new JSONObject(new String(req.body().getBytes(), "UTF-8"));
 
             System.out.println("[PM] from " + userAuth.getHandle());
             System.out.println("[PM] to " + body.getString("to"));

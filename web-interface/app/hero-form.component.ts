@@ -203,6 +203,25 @@ export class HeroFormComponent {
     );
   }
 
+  loadingPrivateMessages = false
+  privateMessages = []
+
+  getPrivateMessages() {
+    this.loadingPrivateMessages = true
+    this.privateMessages = []
+    console.log("getPrivateMessages() -> before GET")
+    let headers = new Headers()
+    return this.http.get(this.endpoint + 'getpm/' + this.token, {headers: headers})
+    .map(response => response.json())
+    .subscribe(
+      data => {
+        this.privateMessages = data
+        this.loadingPrivateMessages = false
+        console.log("getPrivateMessages() -> " + data)
+      }
+    )
+  }
+
   newFollows = [];
 
   logout() {

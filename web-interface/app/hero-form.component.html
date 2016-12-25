@@ -154,6 +154,14 @@
         <button type="button"
                 class="list-group-item list-group-item-action"
                 style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
+                [ngClass]="{'active activeheroku': section == 2 }"
+                (click)="section = 2; getPrivateMessages()">
+          Private messages II
+        </button>
+
+        <button type="button"
+                class="list-group-item list-group-item-action"
+                style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
                 [ngClass]="{'active activeheroku': section == 3 }"
                 (click)="section = 3">
           Source code
@@ -279,6 +287,25 @@
 
         </div>
       </div>
+    </div>
+
+    <div class="col-xs-7" style="padding-left: 20px;padding-right: 20px;" [hidden]="section != 2">
+
+      <div style="text-align: center;" [hidden]="!loadingPrivateMessages">
+        <img style="margin-bottom: 10px;margin-top: 100px;" src="http://s3.twitter-rmi.com/resources/QzeADRN.gif">
+        <p>Loading your private messages...</p>
+      </div>
+
+      <div style="margin-bottom: 25px;text-align: center;" [hidden]="loadingPrivateMessages">
+        <button type="submit" data-toggle="modal" data-target="#pmModal" style="outline: 0;" class="btn btn-outline-primary">Compose message</button>
+      </div>
+
+      <div *ngFor="let pm of privateMessages">
+        <p style="margin-bottom: .1rem;"><strong>From</strong> {{ pm.sender }}</p>
+        <p>{{ pm.body }}</p>
+        <hr>
+      </div>
+
     </div>
 
   </div>
