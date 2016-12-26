@@ -20,7 +20,7 @@ public class Database {
     private static Long nextPm;
 
     static {
-        jedis = new Jedis("localhost");
+        jedis = new Jedis("rogueone.twitter-rmi.com");
         // jedis.auth("sandsand");
         nextPost = 0L;
         jedis.set("postId", "0");
@@ -83,7 +83,7 @@ public class Database {
 
             userProperties.put("username", handle);
             userProperties.put("password", password);
-            userProperties.put("bio", "Lorem Ipsum is simply dummy text of the printing and typesetting industry.");
+            userProperties.put("bio", "Lorem Ipsum is simply dummy text of the printing industry.");
             userProperties.put("verified", String.valueOf(false));
 
             jedis.hmset(handle + ":profile", userProperties);
@@ -97,7 +97,7 @@ public class Database {
             Set<String> users = jedis.keys("*:profile");
             List<String> userMap;
             for (String user : users) {
-                userMap = jedis.hmget(user + ":profile", "username");
+                userMap = jedis.hmget(user, "username");
                 if (userMap.get(0).equals(username))
                     return true;
             }

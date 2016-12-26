@@ -11,7 +11,7 @@ import com.twitter.rmi.common.*;
  */
 public class ClientLauncher {
 
-    private static final String REGISTRY_ENDPOINT = "twitter-rmi.com";
+    private static final String REGISTRY_ENDPOINT = "localhost";
 
     private static User user;
 
