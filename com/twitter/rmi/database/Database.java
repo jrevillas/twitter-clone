@@ -231,4 +231,36 @@ public class Database {
             return result;
         }
     }
+
+    public static List<Status> getStatuses (String user) throws RemoteException{
+        synchronized (mutex) {
+            List<String> statusList = jedis.lrange(user + ":status", 0, -1);
+            List<Status> result = new ArrayList<Status>();
+            for (String status: statusList) {
+                List<String> statusHm = jedis.hmget(status + ":post", "user", "body", "timestamp");
+                Status newStatus = new StatusImpl().setBody(statusHm.get(0)).setBody(statusHm.get(1)).
+                        setDate(statusHm.get(2));
+                result.add(newStatus);
+            }
+            return result;
+        }
+    }
+
+    public static Boolean isFollowing(String user1, String user2) throws RemoteException {
+        synchronized (mutex) {
+            List<String> following = jedis.lrange(user1 + ":following", 0, -1);
+            if (following.contains(user2))
+                return true;
+            return false;
+        }
+    }
+
+    public static Boolean isFollowed (String user1, String user2) throws RemoteException {
+        synchronized (mutex) {
+            List<String> followed = jedis.lrange(user1 + ":followed", 0, -1);
+            if (followed.contains(user2))
+                return true;
+            return false;
+        }
+    }
 }

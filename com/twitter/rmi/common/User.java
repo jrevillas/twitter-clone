@@ -24,6 +24,7 @@ public interface User extends Remote {
 
     public List<User> getFollowers(String user) throws RemoteException;
     public List<User> getFollowing(String user) throws RemoteException;
+    public List<User> getUserFollowing() throws RemoteException;
 
     public String getBio() throws  RemoteException;
     public boolean getVerified() throws RemoteException;
@@ -38,5 +39,10 @@ public interface User extends Remote {
 
     public List<PrivateMessage> getSentPM () throws RemoteException;
     public List<PrivateMessage> getReceivedPM() throws RemoteException;
+
+    public List<Status> getStatuses(String username) throws RemoteException;
+
+    public Boolean isFollowing(String user) throws RemoteException;
+    public Boolean isFollowed(String user) throws RemoteException;
 
 }

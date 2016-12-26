@@ -3,12 +3,15 @@ package com.twitter.rmi.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
+import java.util.Optional;
 
 import com.twitter.rmi.common.ClientCallback;
 import com.twitter.rmi.common.PrivateMessage;
 import com.twitter.rmi.common.Status;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.database.Database;
+
+import javax.xml.crypto.Data;
 
 /**
  * Created by jruiz on 06/12/2016.
@@ -30,7 +33,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
         return bio;
     }
 
-    public UserImpl _setBio (String bio) {
+    public UserImpl _setBio(String bio) {
         this.bio = bio;
         return this;
     }
@@ -42,7 +45,7 @@ public class UserImpl extends UnicastRemoteObject implements User {
     }
 
     @Override
-    public boolean getVerified() throws RemoteException{
+    public boolean getVerified() throws RemoteException {
         return verified;
     }
 
@@ -117,6 +120,12 @@ public class UserImpl extends UnicastRemoteObject implements User {
     }
 
     @Override
+    public List<User> getUserFollowing() throws RemoteException {
+        System.out.println(this.getHandle() + " -> getUserFollowing()");
+        return Database.getFollowing(this.getHandle());
+    }
+
+    @Override
     public List<User> getUsers() throws RemoteException {
         System.out.println(this.getHandle() + " -> getUsers()");
         return Database.getUsers();
@@ -153,4 +162,21 @@ public class UserImpl extends UnicastRemoteObject implements User {
         return Database.getReceivedPM(this.getHandle());
     }
 
+    @Override
+    public List<Status> getStatuses(String username) throws RemoteException {
+        System.out.println(username + " -> getStatuses(...)");
+        return Database.getStatuses(username);
+    }
+
+    @Override
+    public Boolean isFollowing(String user) throws RemoteException {
+        System.out.println(this.getHandle() + " -> isFollowing(...)");
+        return Database.isFollowing(this.getHandle(), user);
+    }
+
+    @Override
+    public Boolean isFollowed(String user) throws RemoteException {
+        System.out.println(this.getHandle() + " -> isFollowed(...)");
+        return Database.isFollowed(this.getHandle(), user);
+    }
 }
