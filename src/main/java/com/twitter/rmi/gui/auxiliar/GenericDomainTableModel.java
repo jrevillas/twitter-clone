@@ -35,7 +35,7 @@ import java.util.List;
 public abstract class GenericDomainTableModel<T> implements TableModel {
 
     private EventListenerList listenerList;
-    private List columnIdentifiers;
+    private List<String> columnIdentifiers;
     private final List<T> data;
 
     /**
@@ -44,7 +44,7 @@ public abstract class GenericDomainTableModel<T> implements TableModel {
      */
     public GenericDomainTableModel() {
         data = new ArrayList<>();
-        columnIdentifiers = new ArrayList();
+        columnIdentifiers = new ArrayList<>();
         listenerList = new EventListenerList();
     }
 
@@ -55,7 +55,7 @@ public abstract class GenericDomainTableModel<T> implements TableModel {
      * @param columnIdentifiers Los identificadores para las columnas de la tabla.
      * @throws IllegalArgumentException Si {@code columnIdentifiers} es {@code null}.
      */
-    public GenericDomainTableModel(List columnIdentifiers) {
+    public GenericDomainTableModel(List<String> columnIdentifiers) {
         this();
         if (columnIdentifiers == null) {
             throw new IllegalArgumentException("El parámetro columnIdentifers no puede ser null.");
@@ -319,7 +319,7 @@ public abstract class GenericDomainTableModel<T> implements TableModel {
      * notificando a los listeners.
      * @param columnIdentifiers Los nuevos identificadores de columnas.
      */
-    public void setColumnIdentifiers(List columnIdentifiers) {
+    public void setColumnIdentifiers(List<String> columnIdentifiers) {
         this.columnIdentifiers.clear();
         this.columnIdentifiers.addAll(columnIdentifiers);
         notifyTableHeaderChanged();

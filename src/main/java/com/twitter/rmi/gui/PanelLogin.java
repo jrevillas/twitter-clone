@@ -3,7 +3,6 @@ package com.twitter.rmi.gui;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
 
 class PanelLogin extends JPanel{
 
@@ -73,12 +72,8 @@ class PanelLogin extends JPanel{
         this.add(panelFooter, BorderLayout.SOUTH);
     }
 
-    PanelLogin addFrameAction(ActionListener exit, ActionListener minimize) {
-        panelHeader.addFrameAction(exit, minimize);
-        return this;
-    }
-
-    PanelLogin addLogginButton(GUI gui) {
+    PanelLogin setGUI(GUI gui) {
+        panelHeader.setGUI(gui);
         buttonSignIn.addActionListener(e -> {
             String handle = textHandle.getText();
             String password = String.copyValueOf(textPassword.getPassword());
@@ -87,7 +82,7 @@ class PanelLogin extends JPanel{
                         "Error at Sign in!", JOptionPane.ERROR_MESSAGE);
             else
                 try {
-                   gui.activeUser = gui.twitter.register(handle, password);
+                    gui.activeUser = gui.twitter.register(handle, password);
                     if (gui.activeUser == null)
                         JOptionPane.showMessageDialog(panelCenter, "Incorrect register, are you already " +
                                 "registered?", "Error at sign in!", JOptionPane.ERROR_MESSAGE);

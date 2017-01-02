@@ -7,13 +7,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-/**
- * Created by migui on 24/12/2016.
- */
-public class DialogTweet extends JDialog {
+class DialogTweet extends JDialog {
     private JTextPane textArea;
     private String result;
-    GUI gui;
+    private GUI gui;
 
     DialogTweet() {
         JPanel panelGeneral = new JPanel(new GridBagLayout());
@@ -111,6 +108,12 @@ public class DialogTweet extends JDialog {
         panelGeneral.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
+
+        this.setResizable(false);
+        this.setAlwaysOnTop(true);
+        this.setUndecorated(true);
+        this.pack();
+        this.setModal(true);
     }
 
     private void onOK() {
@@ -122,7 +125,6 @@ public class DialogTweet extends JDialog {
             result = textArea.getText();
             this.setVisible(false);
             this.dispose();
-            gui.continueNewTweet(textArea.getText());
         }
     }
 
@@ -131,7 +133,6 @@ public class DialogTweet extends JDialog {
                 "Confirm?", JOptionPane.YES_NO_OPTION) == 0) {
             this.setVisible(false);
             this.dispose();
-            gui.continueNewTweet("");
         }
     }
 
@@ -139,7 +140,8 @@ public class DialogTweet extends JDialog {
         return result;
     }
 
-    public void setGUI(GUI gui) {
+    DialogTweet setGUI(GUI gui) {
         this.gui = gui;
+        return this;
     }
 }

@@ -5,7 +5,8 @@ import com.twitter.rmi.gui.resources.GetImage;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 
 class PanelHeader extends JPanel {
@@ -16,10 +17,12 @@ class PanelHeader extends JPanel {
     private JButton buttonMinimize;
 
     private JPanel panelData;
+    private JPanel panelButtons;
 
     private Font theFont = new Font("Roboto", 0, 24);
     private Color theColor = Color.decode("#c9e0ff");
-    private boolean login;
+
+    private Point initialClick;
 
     PanelHeader() {
         this.setLayout(new GridLayout(1, 2));
@@ -28,7 +31,7 @@ class PanelHeader extends JPanel {
         panelData = new JPanel(new FlowLayout(FlowLayout.LEADING));
         panelData.setOpaque(false);
 
-        JPanel panelButtons = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+        panelButtons = new JPanel(new FlowLayout(FlowLayout.TRAILING));
         panelButtons.setOpaque(false);
 
         buttonMain = new JButton();
@@ -42,7 +45,7 @@ class PanelHeader extends JPanel {
         buttonMessages = new JButton("");
         buttonMessages.setFont(theFont);
         buttonMessages.setForeground(theColor);
-        buttonMessages.setIcon(GetImage.getImage("message.png", 30,30));
+        buttonMessages.setIcon(GetImage.getImage("message.png", 30, 30));
         buttonMessages.setContentAreaFilled(false);
         buttonMessages.setBorderPainted(false);
         buttonMessages.setFocusPainted(false);
@@ -51,7 +54,7 @@ class PanelHeader extends JPanel {
         buttonTweet = new JButton("");
         buttonTweet.setFont(theFont);
         buttonTweet.setForeground(theColor);
-        buttonTweet.setIcon(buttonMessages.getIcon());
+        buttonTweet.setIcon(GetImage.getImage("tweet.png", 25, 25));
         buttonTweet.setContentAreaFilled(false);
         buttonTweet.setBorderPainted(false);
         buttonTweet.setFocusPainted(false);
@@ -81,38 +84,64 @@ class PanelHeader extends JPanel {
         this.add(panelButtons, 1);
     }
 
+    PanelHeader setGUI(GUI gui) {
+        buttonExit.addActionListener(e -> gui.exit());
+        buttonMinimize.addActionListener(e -> gui.frame.setState(Frame.ICONIFIED));
+
+        buttonMain.addActionListener(e -> gui.changeUser(""));
+        buttonMessages.addActionListener(e -> System.out.println("TODO"));
+        buttonTweet.addActionListener(e -> gui.writeNewTweet());
+
+        MouseAdapter mouseDragged = new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+
+                // get location of Window
+                int thisX = gui.frame.getLocation().x;
+                int thisY = gui.frame.getLocation().y;
+
+                // Determine how much the mouse moved since the initial click
+                int xMoved = (thisX + e.getX()) - (thisX + initialClick.x);
+                int yMoved = (thisY + e.getY()) - (thisY + initialClick.y);
+
+                // Move window to this position
+                int X = thisX + xMoved;
+                int Y = thisY + yMoved;
+                gui.frame.setLocation(X, Y);
+            }
+        };
+
+
+        MouseAdapter mousePressed = new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                initialClick = e.getPoint();
+            }
+        };
+
+        panelButtons.addMouseMotionListener(mouseDragged);
+        panelButtons.addMouseListener(mousePressed);
+
+        panelData.addMouseMotionListener(mouseDragged);
+        panelData.addMouseListener(mousePressed);
+
+        return this;
+    }
+
     PanelHeader setType(boolean login) {
         if (login) {
             buttonMain.setText("Login");
-            this.login = true;
         } else {
             buttonMain.setText("Timeline");
-            buttonMain.setIcon(GetImage.getImage("home.png", 30,30));
+            buttonMain.setIcon(GetImage.getImage("home.png", 25, 25));
             panelData.add(buttonMain);
             panelData.add(buttonMessages);
             panelData.add(buttonTweet);
-            this.login = false;
         }
         return this;
     }
 
     PanelHeader setLabel(String label) {
         buttonMain.setText(label);
-        buttonTweet.setText("");
-        buttonMessages.setText("");
-        return this;
-    }
-
-    PanelHeader addFrameAction(ActionListener exit, ActionListener minimize) {
-        buttonExit.addActionListener(exit);
-        buttonMinimize.addActionListener(minimize);
-        return this;
-    }
-
-    PanelHeader addAction(ActionListener home, ActionListener message, ActionListener tweet) {
-        buttonMain.addActionListener(home);
-        buttonMessages.addActionListener(message);
-        buttonTweet.addActionListener(tweet);
         return this;
     }
 }
