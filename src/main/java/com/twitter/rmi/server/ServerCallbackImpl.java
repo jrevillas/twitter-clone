@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by dmelero on 8/12/16.
+ * Created by jrevillas on 8/12/16.
  */
 public class ServerCallbackImpl extends UnicastRemoteObject implements ServerCallback{
 
@@ -24,23 +24,22 @@ public class ServerCallbackImpl extends UnicastRemoteObject implements ServerCal
 
     public static synchronized void notifyOnTweet(String user, String content) throws RemoteException {
 
-        System.out.println("Empezamos los Callbacks de: @" + user);
+        System.out.println("[CALLBACKS] Empezamos los Callbacks de: @" + user);
 
         List<User> followers = Database.getFollowers(user);
 
-        System.out.println("El usuario " + user + " tiene " + followers.size() + " seguidores.");
+        System.out.println("[CALLBACKS] El usuario " + user + " tiene " + followers.size() + " seguidores.");
 
         for(int i = 0; i < followers.size(); i++) {
             ClientCallback toNotify = ServerLauncher.callbacks.get(followers.get(i).getHandle());
             if (toNotify != null) {
-                System.out.println("Intentando notificar a " + user);
+                System.out.println("[CALLBACKS] Intentando notificar a " + user);
                 toNotify.notifyMe(followers.get(i).getHandle(), content);
             } else {
-                System.out.println("[CALLBACK-RPC] Imposible notificar a " + followers.get(i) + ": offline");
+                System.out.println("[CALLBACKS] Imposible notificar a " + followers.get(i) + ": offline");
             }
         }
-
-        System.out.println("Terminamos los Callbacks de: @" + user);
+        System.out.println("[CALLBACKS] Terminados los callbacks de: @" + user);
     }
 
 }
