@@ -10,7 +10,6 @@ import java.awt.event.WindowEvent;
 class DialogTweet extends JDialog {
     private JTextPane textArea;
     private String result;
-    private GUI gui;
 
     DialogTweet() {
         JPanel panelGeneral = new JPanel(new GridBagLayout());
@@ -120,8 +119,7 @@ class DialogTweet extends JDialog {
         if (textArea.getText().length() == 0)
             JOptionPane.showMessageDialog(this, "You must write something", "Empty Tweet",
                     JOptionPane.WARNING_MESSAGE);
-        else if (JOptionPane.showConfirmDialog(this, "Are you sure you want to write this?",
-                "Confirm?", JOptionPane.YES_NO_OPTION) == 0) {
+        else {
             result = textArea.getText();
             this.setVisible(false);
             this.dispose();
@@ -129,19 +127,13 @@ class DialogTweet extends JDialog {
     }
 
     private void onCancel() {
-        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to exit",
-                "Confirm?", JOptionPane.YES_NO_OPTION) == 0) {
-            this.setVisible(false);
-            this.dispose();
-        }
+        this.setVisible(false);
+        this.dispose();
     }
 
-    String getResult(){
-        return result;
-    }
-
-    DialogTweet setGUI(GUI gui) {
-        this.gui = gui;
-        return this;
+    String getResult() {
+        String res = result;
+        result = null;
+        return res;
     }
 }

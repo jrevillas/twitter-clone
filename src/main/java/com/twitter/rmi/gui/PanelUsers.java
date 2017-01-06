@@ -2,7 +2,6 @@ package com.twitter.rmi.gui;
 
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.gui.auxiliar.GenericDomainTableModel;
-import com.twitter.rmi.gui.resources.GetImage;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,7 +15,6 @@ import java.util.List;
 class PanelUsers extends JPanel {
 
     private JPanel panelProfile;
-    private JPanel panelNewPeople;
     private JButton buttonFindUsers;
     private JButton buttonUser;
     private JButton buttonQuitFind;
@@ -28,7 +26,6 @@ class PanelUsers extends JPanel {
     private GenericDomainTableModel<User> modelUsers;
     private List<User> users;
     private JTextPane textBio;
-    private JLabel labelAvatar;
     private JLabel labelHandle;
 
     PanelUsers setActiveUser(GUI gui, User activeUser) throws RemoteException {
@@ -52,8 +49,8 @@ class PanelUsers extends JPanel {
                 User user = this.getDomainObject(rowIndex);
                 switch (columnIndex) {
                     case 0:
-//                      return GetImage.getImage(user.getAvatar(), 50, 50); TODO
-                        return GetImage.getImage("avatar1.png", 50, 50);
+//                      return Auxiliar.getImage(user.getAvatar(), 50, 50); TODO
+                        return Auxiliar.getImage("avatar1.png", 50, 50);
                     case 1:
                         try {
                             return "<html>" +
@@ -88,7 +85,8 @@ class PanelUsers extends JPanel {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 try {
-                    String handle = modelUsers.getDomainObject(tableUsers.rowAtPoint(mouseEvent.getPoint())).getHandle();
+                    String handle = modelUsers.getDomainObject(tableUsers.
+                            rowAtPoint(mouseEvent.getPoint())).getHandle();
                     gui.changeUser(handle);
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -139,12 +137,10 @@ class PanelUsers extends JPanel {
     }
 
     private JComboBox<String> comboUsers() {
-
         JComboBox<String> comboNewPeople = new JComboBox<>();
         comboNewPeople.setFont(new Font("Roboto Light", 0, 14));
-        comboNewPeople.setPreferredSize(new Dimension(200, 45));
-        comboNewPeople.setMinimumSize(new Dimension(200, 45));
-        comboNewPeople.setVisible(false);
+        comboNewPeople.setPreferredSize(new Dimension(190, 45));
+        comboNewPeople.setMinimumSize(new Dimension(190, 45));
         comboNewPeople.setEditable(true);
         try {
             users = activeUser.getUsers();
@@ -210,7 +206,7 @@ class PanelUsers extends JPanel {
             panelProfile = new JPanel(new GridBagLayout());
             panelProfile.setBackground(Color.decode("#232323"));
 
-            labelAvatar = new JLabel(GetImage.getImage("avatar1.png", 60, 60));
+            JLabel labelAvatar = new JLabel(Auxiliar.getImage("avatar1.png", 60, 60));
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(5, 5, 5, 5);
             gbc.gridx = 1;
@@ -221,21 +217,23 @@ class PanelUsers extends JPanel {
 
             buttonUser = new JButton();
             buttonUser.setText("Settings");
-            buttonUser.setForeground(Color.white);
+            buttonUser.setFont(new Font("Roboto Light", 0, 12));
+            buttonUser.setForeground(Color.BLACK);
             buttonUser.setBackground(Color.decode("#c9e0ff"));
             buttonUser.setMaximumSize(new Dimension(85, 30));
             buttonUser.setMinimumSize(new Dimension(85, 30));
             buttonUser.addActionListener(e -> gui.openSettings());
-            buttonUser.setMargin(new Insets(3, 5, 3, 5));
+            buttonUser.setMargin(new Insets(1, 5, 1, 5));
+            buttonUser.setIcon(Auxiliar.getImage("settings.png", 15, 15));
             gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
+            gbc.insets = new Insets(10, 5, 10, 5);
             gbc.gridx = 1;
             gbc.gridy = 2;
             gbc.weightx = 0;
             panelProfile.add(buttonUser, gbc);
 
-            labelHandle = new JLabel("@"+activeUser.getHandle());
-            labelHandle.setFont(new Font("Roboto", 0, 16));
+            labelHandle = new JLabel("@" + activeUser.getHandle());
+            labelHandle.setFont(new Font("Roboto", 0, 18));
             labelHandle.setForeground(Color.decode("#c9e0ff"));
             gbc = new GridBagConstraints();
             gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -262,12 +260,13 @@ class PanelUsers extends JPanel {
         }
     }
 
-    void changeUser(String handle)  {
+    void changeUser(String handle) {
         modelUsers.clearTableModelData();
         try {
-            if (handle.length()==0) {
+            if (handle.length() == 0 || handle.equals(activeUser.getHandle())) {
                 labelHandle.setText("@" + activeUser.getHandle());
                 textBio.setText(activeUser.getBio());
+                buttonUser.setIcon(Auxiliar.getImage("settings.png", 15, 15));
                 buttonUser.setText("Settings");
                 buttonUser.removeActionListener(buttonUser.getActionListeners()[0]);
                 buttonUser.addActionListener(e -> gui.openSettings());
@@ -278,6 +277,7 @@ class PanelUsers extends JPanel {
                     if (user.getHandle().equals(handle))
                         textBio.setText(user.getBio());
                 buttonUser.setText((activeUser.isFollowing(handle)) ? "UnFollow" : "Follow");
+                buttonUser.setIcon(null);
                 buttonUser.removeActionListener(buttonUser.getActionListeners()[0]);
                 buttonUser.addActionListener(e -> follow(handle));
                 modelUsers.addRows(activeUser.getFollowing(handle));
@@ -296,7 +296,7 @@ class PanelUsers extends JPanel {
                 activeUser.follow(handle);
                 buttonUser.setText("UnFollow");
             }
-        } catch (RemoteException ignored) {}
+        } catch (RemoteException ignored) {
+        }
     }
-
 }

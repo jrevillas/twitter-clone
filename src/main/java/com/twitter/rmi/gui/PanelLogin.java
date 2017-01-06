@@ -1,5 +1,8 @@
 package com.twitter.rmi.gui;
 
+import com.twitter.rmi.common.User;
+import com.twitter.rmi.gui.GUI.VIEW;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -18,7 +21,7 @@ class PanelLogin extends JPanel{
         this.setLayout(new BorderLayout());
 
         // HEADER!
-        panelHeader = new PanelHeader().setType(true).setLabel("Login");
+        panelHeader = new PanelHeader().setType(VIEW.LOGIN).setLabel("Login");
 
         // CENTER
         panelCenter = new JPanel(new GridLayout(4, 1));
@@ -75,6 +78,7 @@ class PanelLogin extends JPanel{
     PanelLogin setGUI(GUI gui) {
         panelHeader.setGUI(gui);
         buttonSignIn.addActionListener(e -> {
+            User activeUser;
             String handle = textHandle.getText();
             String password = String.copyValueOf(textPassword.getPassword());
             if (handle.length() == 0 || password.length() == 0)
@@ -82,12 +86,12 @@ class PanelLogin extends JPanel{
                         "Error at Sign in!", JOptionPane.ERROR_MESSAGE);
             else
                 try {
-                    gui.activeUser = gui.twitter.register(handle, password);
-                    if (gui.activeUser == null)
-                        JOptionPane.showMessageDialog(panelCenter, "Incorrect register, are you already " +
-                                "registered?", "Error at sign in!", JOptionPane.ERROR_MESSAGE);
+                    activeUser = gui.getTwitter().register(handle, password);
+                    if (activeUser == null)
+                        JOptionPane.showMessageDialog(panelCenter, "Incorrect register, are you registered?",
+                                "Error at sign in!", JOptionPane.ERROR_MESSAGE);
                     else
-                        gui.start();
+                        gui.start(activeUser);
                 } catch (Exception e1) {
                     e1.printStackTrace();
                     JOptionPane.showMessageDialog(panelCenter, "No connection detected",
@@ -95,6 +99,7 @@ class PanelLogin extends JPanel{
                 }
         });
         buttonLogIn.addActionListener(e -> {
+            User activeUser;
             String handle = textHandle.getText();
             String password = String.copyValueOf(textPassword.getPassword());
             if (handle.length() == 0 || password.length() == 0)
@@ -102,12 +107,12 @@ class PanelLogin extends JPanel{
                         "Error at Logging in!", JOptionPane.ERROR_MESSAGE);
             else
                 try {
-                    gui.activeUser = gui.twitter.login(handle, password);
-                    if (gui.activeUser == null)
+                    activeUser = gui.getTwitter().login(handle, password);
+                    if (activeUser == null)
                         JOptionPane.showMessageDialog(panelCenter, "Incorrect register, are you already " +
                                 "registered?", "Error at sign in!", JOptionPane.ERROR_MESSAGE);
                     else
-                        gui.start();
+                        gui.start(activeUser);
                 } catch (Exception e1) {
                     e1.printStackTrace();
                     JOptionPane.showMessageDialog(panelCenter, "No connection detected",

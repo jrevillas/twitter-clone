@@ -1,41 +1,47 @@
 package com.twitter.rmi.gui;
 
-import com.twitter.rmi.common.Status;
+import com.twitter.rmi.common.ClientCallback;
 import com.twitter.rmi.common.Twitter;
 import com.twitter.rmi.common.User;
-import com.twitter.rmi.gui.auxiliar.GenericDomainTableModel;
-import com.twitter.rmi.gui.resources.GetImage;
+import com.twitter.rmi.gui.auxiliar.ToastMessage;
 
 import javax.swing.*;
 import java.awt.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
-import java.util.Date;
+import java.rmi.server.UnicastRemoteObject;
 
-public class GUI {
+public class GUI extends UnicastRemoteObject implements ClientCallback {
+
+    enum VIEW {
+        LOGIN, MESSAGES, TWEETS, PROFILE
+    }
+
+    enum FrameState { MAXIMIZE, MINIMIZE, RESTORE }
+
     JFrame frame;
     private JPanel panelGeneral;
     private PanelHeader panelHeader;
-    private JSplitPane panelBody;
-    PanelUsers panelUsers;
-    private JScrollPane scrollPaneTweets;
+    private PanelUsers panelUsers;
+    private PanelTweets panelTweets;
+    private PanelMessages panelMessages;
     private Component glassPane;
+    private Twitter twitter;
+    private User activeUser;
+    private JSplitPane splitBody;
 
-    private GenericDomainTableModel<Status> modelTweets;
-
-    Twitter twitter;
-    User activeUser;
 
     /**
      * <B>FUNCTION:</B> main constructor of the interface
      */
-    private GUI() {
+    private GUI() throws RemoteException {
+        // Connection with the RMI Server
+
         System.setProperty("java.rmi.server.useCodebaseOnly", "false");
-//        System.setProperty("java.security.policy", "security.policy");
-//        if (System.getSecurityManager() == null)
-//            System.setSecurityManager(new SecurityManager());
+        System.setProperty("java.security.policy", "security.policy");
+        if (System.getSecurityManager() == null)
+            System.setSecurityManager(new SecurityManager());
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", Registry.REGISTRY_PORT);
             twitter = (Twitter) registry.lookup("com.twitter.rmi.server.TwitterImpl");
@@ -45,7 +51,6 @@ public class GUI {
             System.exit(1);
         }
 
-        // ------------------------------------------------------------------
         // FRAME CONFIGURATION
 
         this.frame = new JFrame();
@@ -65,10 +70,13 @@ public class GUI {
         login();
     }
 
+    // Initializer
+
+    /**
+     * <B>FUNCTION:</B> starts the login process
+     */
     private void login() {
-
         JPanel panelLogin = new PanelLogin().setGUI(this);
-
         this.frame.setContentPane(panelLogin);
         frame.setUndecorated(true);
         this.frame.setResizable(false);
@@ -77,14 +85,21 @@ public class GUI {
         this.frame.setVisible(true);
     }
 
-    void start() {
-        this.panelGeneral = new JPanel();
+    void start(User activeUser) {
+        try {
+            activeUser.pushSubscribe(this);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        this.activeUser = activeUser;
+        this.panelGeneral = new JPanel(); // TODO llevar al metodo change view
         this.panelGeneral.setLayout(new BorderLayout());
 
-        panelHeader = new PanelHeader().setType(false).setGUI(this);
+        panelHeader = new PanelHeader().setType(VIEW.TWEETS).setGUI(this);
         panelGeneral.add(panelHeader, BorderLayout.NORTH);
 
-        this.initializeTweets("");
+        panelTweets = new PanelTweets(new JTable()).setActiveUser(activeUser).refreshTimeline();
+        panelMessages = new PanelMessages(new JTable()).setActiveUser(activeUser);
 
         try {
             panelUsers = new PanelUsers().setActiveUser(this, activeUser);
@@ -92,85 +107,33 @@ public class GUI {
             e.printStackTrace();
         }
 
-        panelBody = new JSplitPane();
-        panelBody.setLeftComponent(scrollPaneTweets);
-        panelBody.setRightComponent(panelUsers);
-        panelBody.setDividerSize(0);
-        panelGeneral.add(panelBody, BorderLayout.CENTER);
+        splitBody = new JSplitPane();
+        splitBody.setDividerSize(0);
+        splitBody.setRightComponent(panelUsers);
+        splitBody.setLeftComponent(panelTweets);
+        panelGeneral.add(splitBody, BorderLayout.CENTER);
 
         this.frame.setContentPane(panelGeneral);
         this.frame.pack();
-        panelBody.setResizeWeight(1);
-        panelBody.setDividerLocation(0.72);
+        splitBody.setDividerLocation(0.72);
+        splitBody.setResizeWeight(1);
+        this.frame.pack();
         this.frame.setLocationRelativeTo(null);
         this.frame.setVisible(true);
+
+        this.writeNewMessage();
     }
 
-    void initializeTweets(String handle) {
-        modelTweets = new GenericDomainTableModel<Status>(Arrays.asList(new String[]{"avatar", "content"})) {
-            @Override
-            public Class<?> getColumnClass(int columnIndex) {
-                switch (columnIndex) {
-                    case 0:
-                        return ImageIcon.class;
-                    case 1:
-                        return JTextPane.class;
-                    default:
-                        return null;
-                }
-            }
-
-            @Override
-            public Object getValueAt(int rowIndex, int columnIndex) {
-                Status status = this.getDomainObject(rowIndex);
-                switch (columnIndex) {
-                    case 0:
-//                        return GetImage.getImage(status.getAvatar(), 72, 72); // TODO
-                        return GetImage.getImage("avatar1.png", 72, 72);
-                    case 1:
-                        try {
-                            return "<html>" +
-                                    "<font color=#A9CEFF face=\"Roboto Medium\" size=5>" + status.getUserHandle() + " </font>" +
-                                    "<font color=#737373 face=\"Roboto Light\" size=4>" + formatDate(status.getDate()) + "</font><br>" +
-                                    "<<font color=#23232323 face=\"Roboto Light\" size=4>" + status.getBody() + "</font>";
-                        } catch (RemoteException e) {
-                            return "ERROR";
-                        }
-                    default:
-                        return null;
-                }
-            }
-
-            @Override
-            public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-            }
-        };
-        JTable tableTweets = new JTable(modelTweets);
-        tableTweets.getColumn("avatar").setMaxWidth(100);
-        tableTweets.getColumn("avatar").setMinWidth(100);
-        tableTweets.setRowHeight(100);
-        tableTweets.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-        tableTweets.getTableHeader().setUI(null);
-        tableTweets.setShowVerticalLines(false);
-        scrollPaneTweets = new JScrollPane(tableTweets);
-        int dim = 300;
-        scrollPaneTweets.setMinimumSize(new Dimension(dim,450));
-        scrollPaneTweets.setPreferredSize(new Dimension(dim,450));
-        scrollPaneTweets.setSize(new Dimension(dim,450));
-        try {
-            modelTweets.addRows(activeUser.getTimeline());
-        } catch (RemoteException ignored) {}
-    }
+    // System Methods
 
     void writeNewTweet() {
-        changeUser("");
         glassPane.setVisible(true);
         frame.setEnabled(false);
-        DialogTweet dialogTweet = new DialogTweet().setGUI(this);
 
+        DialogTweet dialogTweet = new DialogTweet();
         dialogTweet.setLocationRelativeTo(panelGeneral);
-
         dialogTweet.setVisible(true);
+
         glassPane.setVisible(false);
         frame.setEnabled(true);
         glassPane.setVisible(false);
@@ -179,8 +142,31 @@ public class GUI {
             String res = dialogTweet.getResult();
             if (res != null) {
                 activeUser.submitStatus(res);
-                modelTweets.clearTableModelData();
-                modelTweets.addRows(activeUser.getTimeline());
+                panelTweets.refreshTimeline();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void writeNewMessage() {
+        glassPane.setVisible(true);
+        frame.setEnabled(false);
+
+        DialogMessage dialogMessage = new DialogMessage().setActiveUser(activeUser);
+        // TODO if visiting o lo que sea, hacer dialogMessage.setDestinatary();
+        dialogMessage.setLocationRelativeTo(panelGeneral);
+        dialogMessage.setVisible(true);
+
+        glassPane.setVisible(false);
+        frame.setEnabled(true);
+        glassPane.setVisible(false);
+        frame.setEnabled(true);
+        try {
+            String receiver = dialogMessage.getReceiver();
+            String content = dialogMessage.getContent();
+            if (receiver != null && content != null) {
+                activeUser.submitPm(content, receiver);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -192,47 +178,75 @@ public class GUI {
         JOptionPane.showMessageDialog(panelGeneral, "UNDER CONSTRUCTION", "TODO", JOptionPane.ERROR_MESSAGE);
     }
 
+    void changePanel(VIEW toView) {
+        switch (toView) {
+            case TWEETS:
+                splitBody.setLeftComponent(panelTweets.refreshTimeline());
+                panelUsers.changeUser("");
+                break;
+            case MESSAGES:
+                splitBody.setLeftComponent(panelMessages.getMessages());
+                break;
+        }
+        panelHeader.setType(toView);
+        splitBody.setDividerLocation(0.72);
+        splitBody.setResizeWeight(1);
+    }
+
     void changeUser(String handle) {
-        try {
-            panelHeader.setLabel((handle.equals("")? "Timeline" : ""));
-            modelTweets.clearTableModelData();
-            if (handle.equals(""))
-                modelTweets.addRows(activeUser.getTimeline());
-            else
-                modelTweets.addRows(activeUser.getStatuses(handle));
-            panelUsers.changeUser(handle);
-        } catch (RemoteException ignored) {}
+        panelHeader.setLabel((handle.equals("") ? "Timeline" : ""));
+        if (handle.equals(""))
+            panelTweets.refreshTimeline();
+        else
+            panelTweets.getStatusFrom(handle);
+        panelUsers.changeUser(handle);
+    }
+
+    void notifyMessage(String handle) {
+        new ToastMessage().setText("New PM from " + handle).setLocation(panelHeader).setVisibleFor(2.5);
+    }
+
+    private void notifyStatus(String handle) {
+        new ToastMessage().setText("New Status from " + handle).setLocation(panelHeader).setVisibleFor(100);
+    }
+
+    @Override
+    public String notifyMe(String username, String msg) throws RemoteException {
+        notifyStatus(username);
+        return null;
     }
 
     void exit() {
+        if (activeUser != null)
+            try {
+                activeUser.pushUnsubscribe(this);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         System.exit(0);
     }
 
-    public static String formatDate(String date){
-        try {
-            long dateNow = new Date().getTime();
-            long dateStatus = Long.parseLong(date);
-            long diff = (dateNow - dateStatus) / 1000;
-            if (diff < 60)
-                return "just now";
-            if (diff < 60 + 60)
-                return "a minute ago";
-            if (diff < 60 * 60)
-                return (int) diff / 60 + " minutes ago";
-            if (diff < 60 * 60 * 2)
-                return "an hour ago";
-            if (diff < 60 * 60 * 24)
-                return (int) diff / 3600 + " hours ago";
-            if (diff < 86400 * 365)
-                return date.substring(6, 11);
-            return date.substring(6);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "before the big bang";
+    // More Methods
+
+    void setFrameState(FrameState fs) {
+        switch (fs) {
+            case MAXIMIZE:
+
+                break;
+            case MINIMIZE:
+                frame.setState(Frame.ICONIFIED);
+                break;
+            case RESTORE:
+                frame.setState(Frame.NORMAL);
+                break;
         }
     }
 
-    public static void main(String[] args) {
+    public Twitter getTwitter() {
+        return twitter;
+    }
+
+    public static void main(String[] args) throws RemoteException {
         new GUI();
     }
 }
