@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="SYSLOG-TLS" class="com.papertrailapp.logback.Syslog4jAppender">
+        <filter class="com.twitter.rmi.server.PTLogger" />
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%m%n%xEx</pattern>
+        </layout>
+        <syslogConfig class="org.productivity.java.syslog4j.impl.net.tcp.ssl.SSLTCPNetSyslogConfig">
+            <host>logs4.papertrailapp.com</host>
+            <port>28644</port>
+            <ident>rmi-logger</ident>
+            <maxMessageLength>128000</maxMessageLength>
+        </syslogConfig>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%-5level %logger{35}: %m%n%xEx</pattern>
+        </layout>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="SYSLOG-TLS" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
