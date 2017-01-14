@@ -23,6 +23,9 @@ export class HeroFormComponent {
   endpoint = 'http://localhost:8080/';
   wsEndpoint = 'ws://localhost:8080/notifications';
 
+  // endpoint = 'http://api.twitter-rmi.com/';
+  // wsEndpoint = 'ws://api.twitter-rmi.com:8080/notifications';
+
   webSocket = undefined;
 
   addToast(title, msg) {
@@ -46,7 +49,7 @@ export class HeroFormComponent {
     let jsonMsg = JSON.parse(msg.data);
     this.addToast("@" + this.userHandle, jsonMsg.msg);
     let tweet = {user_handler: "twitter-rmi", body: jsonMsg.msg, verify: false};
-    this.timeline.unshift(tweet);
+    // this.timeline.unshift(tweet);
     console.log("[WEBSOCKETS] " + msg.data);
   }
 
@@ -76,6 +79,7 @@ export class HeroFormComponent {
 
   userHandle = '';
   userBio = '';
+  loginError = false;
 
   login() {
     console.log("Holita desde login antes de hacer post");
@@ -89,7 +93,9 @@ export class HeroFormComponent {
       data => {
         if (data.error == 'login incorrecto') {
           console.log('recibida respuesta de login incorrecto');
+          this.loginError = true;
         } else {
+          this.loginError = false;
           this.token = data.token,
           this.userHandle = data.handle,
           this.newFollows = data.follows,
@@ -145,7 +151,7 @@ export class HeroFormComponent {
   submitStatus() {
     console.log("Holita desde submitStatus() antes de hacer post");
     let body = this.tweet;
-    console.log(body);
+    // console.log(body);
     let headers = new Headers();
     headers.append('Content-Type', 'application/x-www-form-urlencoded');
     this.isSendingTweet = true;
@@ -169,7 +175,7 @@ export class HeroFormComponent {
     let body = '{"to": "' + this.pmTo + '", "body": "' + this.pmBody + '"}';
     console.log(body);
     let headers = new Headers();
-    headers.append('Content-Type', 'application/x-www-form-urlencoded');
+    headers.append('Content-Type', 'application/json; charset=utf-8');
     this.isSendingTweet = true;
     return this.http.post(this.endpoint + 'pm/' + this.token, body, {headers: headers})
     .map(response => response.json())
@@ -285,6 +291,12 @@ export class HeroFormComponent {
     else if (handler == 'twitter-rmi') {
       return 'https://pbs.twimg.com/profile_images/767879603977191425/29zfZY6I_400x400.jpg';
     }
+    else if (handler == 'miguel_jimg' || handler == 'miguel' || handler == 'mjimenez') {
+      return 'https://pbs.twimg.com/profile_images/2919845983/53a9fbe37e7dbb8abd19d7f6df1f8891_400x400.jpeg';
+    }
+    else if (handler == 'rfgpl' || handler == 'rfernandez' || handler == 'rafa') {
+      return 'https://pbs.twimg.com/profile_images/736138563541213184/9MTfRQ0R_400x400.jpg';
+    }
     else if (handler == 'javiruiz' || handler == 'javiruiz01') {
       return 'https://pbs.twimg.com/profile_images/795311430971039744/0ZfOasx5_400x400.jpg';
     }
@@ -316,10 +328,11 @@ export class HeroFormComponent {
     .map(response => response.json())
     .subscribe(
       data => {
-        this.timeline = data,
-        console.log('Recibida timeline -> ', data),
-        this.isSendingTweet = false;
-        this.pendingTimeline = false;
+        this.timeline = data
+        // console.log('Recibida timeline -> ', data),
+        console.table(data)
+        this.isSendingTweet = false
+        this.pendingTimeline = false
       },
       error => console.log('Error al recibir la timeline')
     );

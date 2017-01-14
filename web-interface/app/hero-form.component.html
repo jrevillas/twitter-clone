@@ -15,6 +15,9 @@
     <img [hidden]="register" src="http://s3.twitter-rmi.com/resources/upm-twitter.png" style="display: block;height: 125px;margin: 0 auto 0 auto;width: auto;">
     <h1 [hidden]="!register" style="font-family: 'Open Sans', sans-serif;font-size: 1.75em;text-align: center;-webkit-font-smoothing: antialiased;">twitter-rmi</h1>
     <h2 style="color: rgba(0, 0, 0, .5);font-family: 'Open Sans', sans-serif;font-size: 1em;letter-spacing: .4px;margin-bottom: 25px;margin-top: 12px;font-weight: 400;text-align: center;text-transform: uppercase;-webkit-font-smoothing: antialiased;">web client - angular 2</h2>
+    <div [hidden]="!loginError" class="alert alert-danger" role="alert">
+      <strong>Oh snap!</strong> That is not a valid login.
+    </div>
     <form [hidden]="register" (ngSubmit)="onSubmit()" #heroForm="ngForm">
       <div class="form-group" style="margin-bottom: .75rem;">
         <label for="name" style="color: rgba(0, 0, 0, .65);margin-bottom: .25rem;">Username</label>
@@ -67,9 +70,9 @@
 
   <div class="row" [hidden]="!hello">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#" style="color: rgba(0, 0, 0, .65);">Twitter-rmi</a></li>
-      <li class="breadcrumb-item"><a href="#" style="color: rgba(0, 0, 0, .65);">{{ userHandle }}</a></li>
-      <li class="breadcrumb-item active" style="color: rgba(0, 0, 0, .75);">timeline</li>
+      <li class="breadcrumb-item" style="color: rgba(0, 0, 0, .65);">Twitter-rmi</li>
+      <li class="breadcrumb-item active" style="color: rgba(0, 0, 0, .75);">{{ userHandle }}</li>
+      <!-- <li class="breadcrumb-item active" style="color: rgba(0, 0, 0, .75);">timeline</li> -->
     </ol>
     <div class="heroku-like-line"></div>
   </div>
@@ -145,18 +148,8 @@
                 class="list-group-item list-group-item-action"
                 style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
                 [ngClass]="{'active activeheroku': section == 2 }"
-                data-toggle="modal"
-                data-target="#pmModal"
-                (click)="section = 2">
-          Private messages
-        </button>
-
-        <button type="button"
-                class="list-group-item list-group-item-action"
-                style="font-size: 16px;line-height: 16px;outline: 0;padding: .55rem 1rem;"
-                [ngClass]="{'active activeheroku': section == 2 }"
                 (click)="section = 2; getPrivateMessages()">
-          Private messages II
+          Private messages
         </button>
 
         <button type="button"
@@ -236,7 +229,7 @@
 
       <div style="text-align: center;" [hidden]="!loadingMeetNewPeople">
         <img style="margin-bottom: 10px;margin-top: 100px;" src="http://s3.twitter-rmi.com/resources/QzeADRN.gif">
-        <p>Please, be patient. We are looking for new<br>friends for you, it's not that easy...</p>
+        <p>Please, be patient. We are looking for new friends...</p>
       </div>
 
       <div class="row">
