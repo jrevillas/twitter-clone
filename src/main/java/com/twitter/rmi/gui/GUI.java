@@ -1,6 +1,5 @@
 package com.twitter.rmi.gui;
 
-import com.twitter.rmi.common.ClientCallback;
 import com.twitter.rmi.common.Twitter;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.gui.auxiliar.ToastMessage;
@@ -10,15 +9,13 @@ import java.awt.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 
-public class GUI extends UnicastRemoteObject implements ClientCallback {
-
+public class GUI {
     enum VIEW {
         LOGIN, MESSAGES, TWEETS, PROFILE
     }
 
-    enum FrameState { MAXIMIZE, MINIMIZE, RESTORE }
+    enum FrameState {MAXIMIZE, MINIMIZE, RESTORE}
 
     JFrame frame;
     private JPanel panelGeneral;
@@ -28,26 +25,39 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
     private PanelMessages panelMessages;
     private Component glassPane;
     private Twitter twitter;
-    private User activeUser;
     private JSplitPane splitBody;
-
+    private VIEW activeView;
+    private GUICallbackImpl guiCallback;
+    private User remoteUser;
+    private LocalUser localUser;
+    private DialogLoading dialogLoading;
+    private PanelLogin panelLogin;
+    private boolean online = true;
 
     /**
      * <B>FUNCTION:</B> main constructor of the interface
      */
     private GUI() throws RemoteException {
         // Connection with the RMI Server
-
         System.setProperty("java.rmi.server.useCodebaseOnly", "false");
         System.setProperty("java.security.policy", "security.policy");
         if (System.getSecurityManager() == null)
             System.setSecurityManager(new SecurityManager());
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost", Registry.REGISTRY_PORT);
+            Registry registry;
+            if (online)
+                registry = LocateRegistry.getRegistry("api.twitter-rmi.com",
+                        Registry.REGISTRY_PORT);
+            else
+                registry = LocateRegistry.getRegistry("localhost",
+                        Registry.REGISTRY_PORT);
             twitter = (Twitter) registry.lookup("com.twitter.rmi.server.TwitterImpl");
+            System.out.println("Twitter version: " + twitter.getVersion());
         } catch (Exception e) {
+            // TODO
             JOptionPane.showMessageDialog(null, "No connection with the server",
                     "Connectivity Issues", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
             System.exit(1);
         }
 
@@ -64,9 +74,10 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
         glassPane = frame.getGlassPane();
         this.frame.setTitle("twitter-rmi");
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        UIManager.put("OptionPane.messageFont", new Font("Roboto Light", Font.PLAIN, 14));
-        UIManager.put("OptionPane.buttonFont", new Font("Roboto Light", Font.PLAIN, 16));
-
+        UIManager.put("OptionPane.messageFont",
+                new Font("Roboto Light", Font.PLAIN, 14));
+        UIManager.put("OptionPane.buttonFont",
+                new Font("Roboto Light", Font.PLAIN, 16));
         login();
     }
 
@@ -76,7 +87,8 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
      * <B>FUNCTION:</B> starts the login process
      */
     private void login() {
-        JPanel panelLogin = new PanelLogin().setGUI(this);
+        panelLogin = new PanelLogin().setGUI(this);
+        activeView = VIEW.LOGIN;
         this.frame.setContentPane(panelLogin);
         frame.setUndecorated(true);
         this.frame.setResizable(false);
@@ -86,24 +98,24 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
     }
 
     void start(User activeUser) {
-        try {
-            activeUser.pushSubscribe(this);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-        this.activeUser = activeUser;
-        this.panelGeneral = new JPanel(); // TODO llevar al metodo change view
-        this.panelGeneral.setLayout(new BorderLayout());
+        this.remoteUser = activeUser;
+        activeView = VIEW.TWEETS;
+        panelGeneral = new JPanel();
+        panelGeneral.setLayout(new BorderLayout());
 
         panelHeader = new PanelHeader().setType(VIEW.TWEETS).setGUI(this);
         panelGeneral.add(panelHeader, BorderLayout.NORTH);
 
-        panelTweets = new PanelTweets(new JTable()).setActiveUser(activeUser).refreshTimeline();
+        panelTweets = new PanelTweets(new JTable()).setActiveUser(activeUser);
         panelMessages = new PanelMessages(new JTable()).setActiveUser(activeUser);
 
         try {
+            localUser = new LocalUser().setHandle(activeUser.getHandle());
+            if (!online)
+                guiCallback = new GUICallbackImpl().setThings(this, activeUser).subscribe();
             panelUsers = new PanelUsers().setActiveUser(this, activeUser);
         } catch (RemoteException e) {
+            // TODO
             e.printStackTrace();
         }
 
@@ -113,15 +125,17 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
         splitBody.setLeftComponent(panelTweets);
         panelGeneral.add(splitBody, BorderLayout.CENTER);
 
-        this.frame.setContentPane(panelGeneral);
-        this.frame.pack();
+        showDialogLoading(false);
+
+        frame.setContentPane(panelGeneral);
+        frame.pack();
         splitBody.setDividerLocation(0.72);
         splitBody.setResizeWeight(1);
-        this.frame.pack();
-        this.frame.setLocationRelativeTo(null);
-        this.frame.setVisible(true);
-
-        this.writeNewMessage();
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        frame.pack();
+        refresh();
     }
 
     // System Methods
@@ -136,15 +150,14 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
 
         glassPane.setVisible(false);
         frame.setEnabled(true);
-        glassPane.setVisible(false);
-        frame.setEnabled(true);
         try {
             String res = dialogTweet.getResult();
             if (res != null) {
-                activeUser.submitStatus(res);
-                panelTweets.refreshTimeline();
+                remoteUser.submitStatus(res);
+                this.refresh();
             }
         } catch (RemoteException e) {
+            // TODO
             e.printStackTrace();
         }
     }
@@ -152,9 +165,12 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
     void writeNewMessage() {
         glassPane.setVisible(true);
         frame.setEnabled(false);
-
-        DialogMessage dialogMessage = new DialogMessage().setActiveUser(activeUser);
-        // TODO if visiting o lo que sea, hacer dialogMessage.setDestinatary();
+        DialogMessage dialogMessage = new DialogMessage().setActiveUser(remoteUser);
+        if (activeView == VIEW.PROFILE) {
+            String currentHandle = panelUsers.getCurrentUser();
+            if (!currentHandle.equals(localUser.getHandle()))
+                dialogMessage.setDestinatary(currentHandle);
+        }
         dialogMessage.setLocationRelativeTo(panelGeneral);
         dialogMessage.setVisible(true);
 
@@ -166,72 +182,90 @@ public class GUI extends UnicastRemoteObject implements ClientCallback {
             String receiver = dialogMessage.getReceiver();
             String content = dialogMessage.getContent();
             if (receiver != null && content != null) {
-                activeUser.submitPm(content, receiver);
+                remoteUser.submitPm(content, receiver);
             }
         } catch (RemoteException e) {
+            // TODO
             e.printStackTrace();
         }
     }
 
+    void changePanel(VIEW toView) {
+        if (activeView != VIEW.LOGIN) {
+            switch (toView) {
+                case TWEETS:
+                    splitBody.setLeftComponent(panelTweets);
+                    panelUsers.changeUser("");
+                    break;
+                case MESSAGES:
+                    splitBody.setLeftComponent(panelMessages);
+                    break;
+            }
+            activeView = toView;
+            panelHeader.setType(toView);
+            splitBody.setDividerLocation(0.72);
+            splitBody.setResizeWeight(1);
+            refresh();
+        }
+    }
+
+    void notifyStatus(String handle) {
+        new ToastMessage().setText("New Status from " + handle)
+                .setLocation(panelHeader).setVisibleFor(15);
+    }
+
     void openSettings() {
         // TODO
-        JOptionPane.showMessageDialog(panelGeneral, "UNDER CONSTRUCTION", "TODO", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(panelGeneral, "UNDER CONSTRUCTION", "TODO",
+                JOptionPane.ERROR_MESSAGE);
     }
 
-    void changePanel(VIEW toView) {
-        switch (toView) {
-            case TWEETS:
-                splitBody.setLeftComponent(panelTweets.refreshTimeline());
-                panelUsers.changeUser("");
-                break;
-            case MESSAGES:
-                splitBody.setLeftComponent(panelMessages.getMessages());
-                break;
+    private void refresh() {
+        showDialogLoading(true);
+        try {
+            switch (activeView) {
+                case MESSAGES:
+                    panelMessages.refreshMessages();
+                    break;
+                case TWEETS:
+                    panelTweets.refreshTimeline();
+                    break;
+                case PROFILE:
+                    panelTweets.getStatusFrom(panelUsers.getCurrentUser());
+            }
+        } catch (RemoteException e) {
+            // TODO
+            e.printStackTrace();
         }
-        panelHeader.setType(toView);
-        splitBody.setDividerLocation(0.72);
-        splitBody.setResizeWeight(1);
-    }
-
-    void changeUser(String handle) {
-        panelHeader.setLabel((handle.equals("") ? "Timeline" : ""));
-        if (handle.equals(""))
-            panelTweets.refreshTimeline();
-        else
-            panelTweets.getStatusFrom(handle);
-        panelUsers.changeUser(handle);
-    }
-
-    void notifyMessage(String handle) {
-        new ToastMessage().setText("New PM from " + handle).setLocation(panelHeader).setVisibleFor(2.5);
-    }
-
-    private void notifyStatus(String handle) {
-        new ToastMessage().setText("New Status from " + handle).setLocation(panelHeader).setVisibleFor(100);
-    }
-
-    @Override
-    public String notifyMe(String username, String msg) throws RemoteException {
-        notifyStatus(username);
-        return null;
+        showDialogLoading(false);
     }
 
     void exit() {
-        if (activeUser != null)
-            try {
-                activeUser.pushUnsubscribe(this);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+        if (!online && remoteUser != null)
+            guiCallback.unsubscribe();
         System.exit(0);
     }
 
     // More Methods
 
+    void showDialogLoading(boolean visibility) {
+        glassPane.setVisible(visibility);
+        if (visibility) {
+            dialogLoading = new DialogLoading();
+            dialogLoading.setVisible(true);
+            if (activeView == VIEW.LOGIN)
+                dialogLoading.setLocationRelativeTo(panelLogin);
+            else
+                dialogLoading.setLocationRelativeTo(panelGeneral);
+        } else {
+            dialogLoading.setVisible(false);
+            dialogLoading.dispose();
+        }
+    }
+
     void setFrameState(FrameState fs) {
         switch (fs) {
             case MAXIMIZE:
-
                 break;
             case MINIMIZE:
                 frame.setState(Frame.ICONIFIED);

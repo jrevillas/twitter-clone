@@ -1,6 +1,5 @@
 package com.twitter.rmi.gui;
 
-import com.twitter.rmi.common.Status;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.gui.auxiliar.GenericDomainTableModel;
 
@@ -13,12 +12,12 @@ import java.util.Arrays;
  * Created by migui on 3/01/17.
  */
 class PanelTweets extends JScrollPane {
-    private GenericDomainTableModel<Status> modelTweets;
+    private GenericDomainTableModel<LocalStatus> modelTweets;
     private User activeUser;
 
     PanelTweets(Component component) {
         super(component);
-        modelTweets = new GenericDomainTableModel<Status>(Arrays.asList(new String[]{"avatar", "content"})) {
+        modelTweets = new GenericDomainTableModel<LocalStatus>(Arrays.asList(new String[]{"avatar", "content"})) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 switch (columnIndex) {
@@ -33,20 +32,15 @@ class PanelTweets extends JScrollPane {
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                Status status = this.getDomainObject(rowIndex);
+                LocalStatus status = this.getDomainObject(rowIndex);
                 switch (columnIndex) {
                     case 0:
-//                        return Auxiliar.getImage(status.getAvatar(), 72, 72); // TODO
                         return Auxiliar.getImage("avatar1.png", 72, 72);
                     case 1:
-                        try {
-                            return "<html>" +
-                                    "<font color=#A9CEFF face=\"Roboto Medium\" size=5>" + status.getUserHandle() + " </font>" +
-                                    "<font color=#737373 face=\"Roboto Light\" size=4>" + Auxiliar.formatDate(status.getDate()) + "</font><br>" +
-                                    "<<font color=#23232323 face=\"Roboto Light\" size=4>" + status.getBody() + "</font>";
-                        } catch (RemoteException e) {
-                            return "ERROR";
-                        }
+                        return "<html>" +
+                                "<font color=#A9CEFF face=\"Roboto Medium\" size=5>" + status.getUserHandle() + " </font>" +
+                                "<font color=#737373 face=\"Roboto Light\" size=4>" + Auxiliar.formatDate(status.getDate()) + "</font><br>" +
+                                "<<font color=#23232323 face=\"Roboto Light\" size=4>" + status.getBody() + "</font>";
                     default:
                         return null;
                 }
@@ -71,28 +65,19 @@ class PanelTweets extends JScrollPane {
         this.setSize(new Dimension(300, 450));
     }
 
-    PanelTweets setActiveUser(User activeUser){
+    PanelTweets setActiveUser(User activeUser) {
         this.activeUser = activeUser;
         return this;
     }
 
-    PanelTweets refreshTimeline() {
-        System.out.println("Refreshing tweets");
+    PanelTweets refreshTimeline() throws RemoteException {
         modelTweets.clearTableModelData();
-        try {
-            modelTweets.addRows(activeUser.getTimeline());
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        modelTweets.addRows(Auxiliar.getLocalStatus(activeUser.getTimeline()));
         return this;
     }
 
-    void getStatusFrom(String handle) {
+    void getStatusFrom(String handle) throws RemoteException {
         modelTweets.clearTableModelData();
-        try {
-            modelTweets.addRows(activeUser.getStatuses(handle));
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        modelTweets.addRows(Auxiliar.getLocalStatus(activeUser.getStatuses(handle)));
     }
 }

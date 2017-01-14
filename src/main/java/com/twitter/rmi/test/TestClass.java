@@ -1,9 +1,9 @@
-package main.java.com.twitter.rmi.test;
+package com.twitter.rmi.test;
 
 import junit.framework.*;
-import main.java.com.twitter.rmi.client.ClientCallbackImpl;
-import main.java.com.twitter.rmi.common.*;
-import main.java.com.twitter.rmi.server.ServerLauncher;
+import com.twitter.rmi.client.ClientCallbackImpl;
+import com.twitter.rmi.common.*;
+import com.twitter.rmi.server.ServerLauncher;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;

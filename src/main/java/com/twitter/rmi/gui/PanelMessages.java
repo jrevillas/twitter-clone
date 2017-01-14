@@ -1,24 +1,19 @@
 package com.twitter.rmi.gui;
 
-import com.twitter.rmi.common.PrivateMessage;
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.gui.auxiliar.GenericDomainTableModel;
-
 import javax.swing.*;
 import java.awt.*;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 
-/**
- * Created by migui on 3/01/17.
- */
 class PanelMessages extends JScrollPane {
-    private GenericDomainTableModel<PrivateMessage> modelMessages;
+    private GenericDomainTableModel<LocalMessages> modelMessages;
     private User activeUser;
 
     PanelMessages(Component component) {
         super(component);
-        modelMessages = new GenericDomainTableModel<PrivateMessage>(Arrays.asList(new String[]{"avatar", "content"})) {
+        modelMessages = new GenericDomainTableModel<LocalMessages>(Arrays.asList(new String[]{"avatar", "content"})) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 switch (columnIndex) {
@@ -33,16 +28,12 @@ class PanelMessages extends JScrollPane {
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                PrivateMessage pm = this.getDomainObject(rowIndex);
+                LocalMessages pm = this.getDomainObject(rowIndex);
                 switch (columnIndex) {
                     case 0:
-//                        return Auxiliar.getImage(status.getAvatar(), 72, 72); // TODO
                         return Auxiliar.getImage("avatar1.png", 72, 72);
                     case 1:
-                        try {
-                            return getHTML(pm.getSender(), pm.getReceiver(), pm.getDate(), pm.getBody());
-                        } catch (RemoteException ignored) {
-                        }
+                        return getHTML(pm.getSender(), pm.getDate(), pm.getBody());
                     default:
                         return null;
                 }
@@ -69,26 +60,20 @@ class PanelMessages extends JScrollPane {
 
     PanelMessages setActiveUser(User activeUser) {
         this.activeUser = activeUser;
-        this.getMessages();
         return this;
     }
 
-    private String getHTML(String sender, String receiver, String date, String body) {
+    private String getHTML(String sender, String date, String body) {
         return "<html>" +
                 "<font color=#737373 face =\"Roboto Light\" size=4>from </font>" +
                 "<font color=#A9CEFF face=\"Roboto Medium\" size=5>" + sender + "</font>" +
-//                "<font color=#737373 face =\"Roboto Light\" size = 4> to </font>" +
-//                "<font color=#232323 face=\"Roboto Medium\" size=5>" + receiver +
                 "<font color=#737373 face=\"Roboto Light\" size=4> " + Auxiliar.formatDate(date) + "</font><br>" +
                 "<font color=#232323 face=\"Roboto Light\" size=4>" + body + "</font>";
     }
 
-    PanelMessages getMessages() {
+    PanelMessages refreshMessages() throws RemoteException {
         modelMessages.clearTableModelData();
-        try {
-            modelMessages.addRows(activeUser.getReceivedPM());
-        } catch (RemoteException ignored) {
-        }
+        modelMessages.addRows(Auxiliar.getLocalMessages(activeUser.getReceivedPM()));
         return this;
     }
 }

@@ -9,9 +9,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-
 class PanelHeader extends JPanel {
-
     private JButton buttonNewMessage;
     private JButton buttonMain;
     private JButton buttonMessages;
@@ -20,10 +18,8 @@ class PanelHeader extends JPanel {
     private JButton buttonMinimize;
     private JButton buttonMax;
     private JButton buttonRestore;
-
     private JPanel panelData;
     private JPanel panelButtons;
-
     private Point initialClick;
     private GUI gui;
 
@@ -126,7 +122,6 @@ class PanelHeader extends JPanel {
         MouseAdapter mouseDragged = new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-
                 // get location of Window
                 int thisX = gui.frame.getLocation().x;
                 int thisY = gui.frame.getLocation().y;
@@ -171,7 +166,6 @@ class PanelHeader extends JPanel {
             buttonMax.setVisible(true);
             gui.setFrameState(FrameState.RESTORE);
         });
-
         buttonMain.addActionListener(e -> gui.changePanel(VIEW.TWEETS));
         buttonMessages.addActionListener(e -> gui.changePanel(VIEW.MESSAGES));
         buttonNewTweet.addActionListener(e -> gui.writeNewTweet());
@@ -181,7 +175,6 @@ class PanelHeader extends JPanel {
     PanelHeader setType(VIEW view) {
         switch (view) {
             case LOGIN:
-                System.out.println("login");
                 buttonMain.setText("Login");
                 buttonMain.setIcon(null);
                 buttonMax.setVisible(false);
@@ -198,16 +191,15 @@ class PanelHeader extends JPanel {
                 buttonMain.setText("");
                 buttonNewMessage.setVisible(true);
                 buttonNewTweet.setVisible(false);
-
                 buttonMessages.setText("Messages");
-
+                break;
+            case PROFILE:
+                buttonMain.setText("");
+                buttonMessages.setText("");
+                buttonNewTweet.setVisible(false);
+                buttonNewMessage.setVisible(true);
                 break;
         }
-        return this;
-    }
-
-    PanelHeader setLabel(String label) {
-        buttonMain.setText(label);
         return this;
     }
 }

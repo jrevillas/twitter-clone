@@ -7,21 +7,19 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-class PanelLogin extends JPanel{
-
+class PanelLogin extends JPanel {
     private JButton buttonLogIn;
     private JButton buttonSignIn;
     private JTextField textHandle;
     private JPasswordField textPassword;
-
     private PanelHeader panelHeader;
     private JPanel panelCenter;
 
-    PanelLogin () {
+    PanelLogin() {
         this.setLayout(new BorderLayout());
 
         // HEADER!
-        panelHeader = new PanelHeader().setType(VIEW.LOGIN).setLabel("Login");
+        panelHeader = new PanelHeader().setType(VIEW.LOGIN);
 
         // CENTER
         panelCenter = new JPanel(new GridLayout(4, 1));
@@ -78,6 +76,7 @@ class PanelLogin extends JPanel{
     PanelLogin setGUI(GUI gui) {
         panelHeader.setGUI(gui);
         buttonSignIn.addActionListener(e -> {
+            gui.showDialogLoading(true);
             User activeUser;
             String handle = textHandle.getText();
             String password = String.copyValueOf(textPassword.getPassword());
@@ -87,18 +86,21 @@ class PanelLogin extends JPanel{
             else
                 try {
                     activeUser = gui.getTwitter().register(handle, password);
-                    if (activeUser == null)
+                    if (activeUser == null) {
+                        gui.showDialogLoading(false);
                         JOptionPane.showMessageDialog(panelCenter, "Incorrect register, are you registered?",
                                 "Error at sign in!", JOptionPane.ERROR_MESSAGE);
-                    else
+                    } else
                         gui.start(activeUser);
                 } catch (Exception e1) {
                     e1.printStackTrace();
+                    gui.showDialogLoading(false);
                     JOptionPane.showMessageDialog(panelCenter, "No connection detected",
                             "Connection is down!", JOptionPane.ERROR_MESSAGE);
                 }
         });
         buttonLogIn.addActionListener(e -> {
+            gui.showDialogLoading(true);
             User activeUser;
             String handle = textHandle.getText();
             String password = String.copyValueOf(textPassword.getPassword());
@@ -108,13 +110,15 @@ class PanelLogin extends JPanel{
             else
                 try {
                     activeUser = gui.getTwitter().login(handle, password);
-                    if (activeUser == null)
+                    if (activeUser == null) {
+                        gui.showDialogLoading(false);
                         JOptionPane.showMessageDialog(panelCenter, "Incorrect register, are you already " +
                                 "registered?", "Error at sign in!", JOptionPane.ERROR_MESSAGE);
-                    else
+                    } else
                         gui.start(activeUser);
                 } catch (Exception e1) {
                     e1.printStackTrace();
+                    gui.showDialogLoading(false);
                     JOptionPane.showMessageDialog(panelCenter, "No connection detected",
                             "Connection is down!", JOptionPane.ERROR_MESSAGE);
                 }

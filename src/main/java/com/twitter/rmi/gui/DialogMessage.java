@@ -14,7 +14,6 @@ class DialogMessage extends JDialog {
     private JTextPane textArea;
     private JComboBox<String> comboUsers;
     private java.util.List<User> users;
-
     private String content;
     private String receiver;
     private JTextField textNewPeople;
@@ -151,8 +150,7 @@ class DialogMessage extends JDialog {
         try {
             users = activeUser.getUsers();
             for (User user : users)
-                if (!user.getHandle().equals(activeUser.getHandle()))
-                    comboNewPeople.addItem(user.getHandle());
+                comboNewPeople.addItem(user.getHandle());
         } catch (RemoteException ignored) {
         }
         textNewPeople = ((JTextField) comboNewPeople.getEditor().getEditorComponent());
@@ -164,8 +162,7 @@ class DialogMessage extends JDialog {
                     String string = textNewPeople.getText();
                     comboNewPeople.removeAllItems();
                     for (User user : users)
-                        if (!user.getHandle().equals(activeUser.getHandle()) &&
-                                user.getHandle().contains(string))
+                        if (user.getHandle().contains(string))
                             comboNewPeople.addItem(user.getHandle());
 
                     textNewPeople.setText(string);
@@ -218,12 +215,5 @@ class DialogMessage extends JDialog {
         String res = content;
         content = null;
         return res;
-    }
-
-
-    public static void main(String[] args) {
-        DialogMessage dialogMessage = new DialogMessage().setActiveUser(null);
-        dialogMessage.setLocationRelativeTo(null);
-        dialogMessage.setVisible(true);
     }
 }

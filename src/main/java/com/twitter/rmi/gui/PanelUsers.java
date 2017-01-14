@@ -2,6 +2,7 @@ package com.twitter.rmi.gui;
 
 import com.twitter.rmi.common.User;
 import com.twitter.rmi.gui.auxiliar.GenericDomainTableModel;
+import com.twitter.rmi.gui.GUI.VIEW;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -18,17 +19,17 @@ class PanelUsers extends JPanel {
     private JButton buttonFindUsers;
     private JButton buttonUser;
     private JButton buttonQuitFind;
-
     private JComboBox<String> comboUsers;
-
     private GUI gui;
     private User activeUser;
     private GenericDomainTableModel<User> modelUsers;
     private List<User> users;
     private JTextPane textBio;
     private JLabel labelHandle;
+    private String currentUser;
 
-    PanelUsers setActiveUser(GUI gui, User activeUser) throws RemoteException {
+    PanelUsers setActiveUser(GUI gui, User activeUser)
+            throws RemoteException {
         this.gui = gui;
         this.activeUser = activeUser;
         this.setLayout(new BorderLayout());
@@ -85,9 +86,9 @@ class PanelUsers extends JPanel {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 try {
-                    String handle = modelUsers.getDomainObject(tableUsers.
-                            rowAtPoint(mouseEvent.getPoint())).getHandle();
-                    gui.changeUser(handle);
+                    changeUser(modelUsers.getDomainObject(tableUsers.
+                            rowAtPoint(mouseEvent.getPoint())).getHandle());
+                    gui.changePanel(VIEW.PROFILE);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -145,8 +146,7 @@ class PanelUsers extends JPanel {
         try {
             users = activeUser.getUsers();
             for (User user : users)
-                if (!user.getHandle().equals(activeUser.getHandle()))
-                    comboNewPeople.addItem(user.getHandle());
+                comboNewPeople.addItem(user.getHandle());
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -162,7 +162,8 @@ class PanelUsers extends JPanel {
                             JOptionPane.showMessageDialog(null, "Sorry could not find that user",
                                     "No user found", JOptionPane.ERROR_MESSAGE);
                         else {
-                            gui.changeUser(selected);
+                            changeUser(selected);
+                            gui.changePanel(VIEW.PROFILE);
                             comboNewPeople.setVisible(false);
                             buttonQuitFind.setVisible(false);
                             buttonFindUsers.setVisible(true);
@@ -171,9 +172,8 @@ class PanelUsers extends JPanel {
                         String string = textNewPeople.getText();
                         comboNewPeople.removeAllItems();
                         for (User user : users) {
-                            if (!user.getHandle().equals(activeUser.getHandle()) &&
-                                    user.getHandle().contains(string)) // || user.getName().contains(string)) TODO
-                                comboNewPeople.addItem(user.getHandle()); // + " " + user.getName());
+                            if (user.getHandle().contains(string))
+                                comboNewPeople.addItem(user.getHandle());
                         }
                         textNewPeople.setText(string);
                         comboNewPeople.showPopup();
@@ -261,6 +261,7 @@ class PanelUsers extends JPanel {
     }
 
     void changeUser(String handle) {
+        currentUser = handle;
         modelUsers.clearTableModelData();
         try {
             if (handle.length() == 0 || handle.equals(activeUser.getHandle())) {
@@ -298,5 +299,9 @@ class PanelUsers extends JPanel {
             }
         } catch (RemoteException ignored) {
         }
+    }
+
+    String getCurrentUser() {
+        return currentUser;
     }
 }
